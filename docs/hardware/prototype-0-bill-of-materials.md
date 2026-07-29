@@ -1,32 +1,61 @@
 # Prototype 0 Bill of Materials
 
 **Document ID:** OR-HW-002  
-**Revision:** 0.1  
-**Status:** Initial purchasing plan; verify current price and availability before purchase
+**Revision:** 0.2  
+**Status:** Initial purchasing plan; verify price and availability immediately before purchase
 
 ## Required Six-Node Set
 
 | Item | Quantity | Purpose |
 |---|---:|---|
-| TI CC1352P7 LaunchPad development kit | 6 | Six communication nodes |
+| Silicon Labs FG23-DK2600A development kit | 6 total | Six communication nodes |
 | USB data cables compatible with boards | 6 | Power, programming, logging |
 | Powered USB hubs | 2 | Multi-node development and automated testing |
 | Wired electret or analog headset test assemblies | 6 | Initial audio capture/playback |
 | Audio interface or codec breakout boards | 6 | ADC/DAC experimentation |
-| Adjustable laboratory supplies or USB power monitors | 2 minimum | Current measurement and fault injection |
+| USB power analyzer or suitable current monitor | 2 minimum | Current measurement and fault injection |
 | Logic analyzer | 1 | Timing, GPIO, and bus observation |
 | Oscilloscope with at least two channels | 1 | Audio and timing measurements |
 | Acoustic loopback fixtures or cables | 6 | Repeatable latency testing |
-| SMA adapters, attenuators, and coax jumpers | 1 set | Controlled RF tests where board design permits |
+| RF attenuators and coax accessories | 1 set | Controlled RF tests where supported |
 | RF shielding boxes or conductive test containers | 2 | Isolation and loss/rejoin testing |
-| Headphones with conservative output capability | 6 | Bench monitoring |
-| MicroSD or host logging storage | As required | Capturing experiment data |
+| Resistive audio loads | 6 | Safe initial audio-output testing |
 
-## Recommended Comparison Set
+## Purchase Order
 
-| Item | Quantity | Purpose |
-|---|---:|---|
-| Silicon Labs EFR32xG23 868–915 MHz Pro Kit or equivalent mainboard/radio-board combination | 2 | Link, timing, power, and tooling comparison |
+### Batch 1 — Entry-Test Pair
+
+Purchase:
+
+- two `FG23-DK2600A` boards;
+- two suitable USB data cables;
+- one basic current-measurement path;
+- one audio input/output test path.
+
+Purpose:
+
+- reproduce the toolchain;
+- establish raw packet exchange;
+- validate timestamps and scheduled transmission;
+- run continuous one-hour transport;
+- establish audio-loopback measurement.
+
+### Batch 2 — Six-Node Expansion
+
+Purchase four additional matching `FG23-DK2600A` boards only after Batch 1 demonstrates:
+
+- repeatable programming from repository instructions;
+- packet timestamp access;
+- arbitrary payload transport;
+- scheduled transmission behavior;
+- stable continuous operation;
+- usable logs and GPIO timing markers.
+
+### Batch 3 — Vendor/Band Comparison
+
+Purchase one or two `LP-CC1352P7-1` boards only when readily available and only after the six-node FG23 baseline has measurable results.
+
+Do not purchase `LP-CC1352P7-4` for the 915 MHz experiment.
 
 ## Existing Equipment Can Substitute
 
@@ -40,31 +69,6 @@ Do not buy duplicates if already available:
 - powered hubs;
 - measurement microphone;
 - sound-level meter.
-
-## Purchase Order
-
-### Batch 1 — Minimal Start
-
-- two TI boards;
-- cables;
-- one audio input/output path;
-- basic current measurement.
-
-Purpose: toolchain, raw packet exchange, timestamping, and audio-loopback feasibility.
-
-### Batch 2 — Six Nodes
-
-Purchase the remaining four TI boards only after Batch 1 demonstrates:
-
-- repeatable programming;
-- packet timestamp access;
-- arbitrary payload transport;
-- stable continuous operation;
-- usable logging.
-
-### Batch 3 — Comparison
-
-Purchase two Silicon Labs nodes after the TI baseline has measurable results.
 
 ## Safety Note
 

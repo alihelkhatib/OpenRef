@@ -1,19 +1,23 @@
 # Radio Platform Sources
 
 **Document ID:** OR-REF-001  
-**Revision:** 0.1  
+**Revision:** 0.2  
 **Accessed:** 2026-07-29
 
-Primary vendor sources consulted for ADR-0004:
+Primary sources consulted for ADR-0004:
 
-1. Texas Instruments — CC1352P7 product page and data sheet.
-2. Texas Instruments — LP-CC1352P7-4 LaunchPad development-kit page.
-3. Silicon Labs — EFR32FG23 product page and family data sheet.
-4. Silicon Labs — EFR32xG23 868–915 MHz Pro Kit page.
-5. Silicon Labs — EFR32FG28 product page.
-6. Semtech — SX1262 product page.
-7. Nordic Semiconductor — nRF9151 product page.
-8. Nordic Semiconductor — nRF52840 product page.
+1. Silicon Labs — EFR32FG23 product and development-kit listings.
+2. Silicon Labs — FG23-DK2600A 868–915 MHz +14 dBm development-kit information.
+3. Silicon Labs — EFR32xG23 868–915 MHz Pro Kit information.
+4. DigiKey — FG23-DK2600A active product listing and fulfillment information.
+5. Texas Instruments — LP-CC1352P7 development-kit page.
+6. Texas Instruments — CC1352P7 product page and data sheet.
+
+## Correct Variant Record
+
+- `LP-CC1352P7-1`: 868/915 MHz plus 2.4 GHz.
+- `LP-CC1352P7-4`: 433 MHz plus 2.4 GHz.
+- `FG23-DK2600A`: 868–915 MHz +14 dBm development kit.
 
 ## Source-Control Rule
 
@@ -27,4 +31,4 @@ Do not copy vendor example code into OpenRef without recording:
 
 ## Procurement Rule
 
-Availability, pricing, board revision, and vendor lifecycle status shall be rechecked immediately before purchase.
+Availability, pricing, board revision, lifecycle status, and exact frequency variant shall be rechecked immediately before purchase.
