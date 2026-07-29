@@ -1,0 +1,2 @@
+[console_scripts]
+openref-sim = openref_sim.cli:main

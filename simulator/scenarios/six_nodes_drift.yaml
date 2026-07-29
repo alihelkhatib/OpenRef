@@ -1,0 +1,28 @@
+name: six_nodes_drift
+duration_seconds: 120
+random_seed: 42
+nodes:
+  - {id: 1, drift_ppm: 8}
+  - {id: 2, drift_ppm: -14}
+  - {id: 3, drift_ppm: 21}
+  - {id: 4, drift_ppm: -4}
+  - {id: 5, drift_ppm: 11}
+  - {id: 6, drift_ppm: -19}
+audio:
+  frame_duration_ms: 20
+  encoded_bitrate_bps: 24000
+  max_queue_frames: 4
+  deadline_ms: 100
+radio:
+  bitrate_bps: 500000
+  overhead_bytes: 16
+  preamble_us: 100
+  propagation_delay_us: 2
+  packet_loss_probability: 0.001
+schedule:
+  slot_spacing_us: 2500
+protocol:
+  initial_coordinator_id: 1
+  heartbeat_interval_ms: 100
+  heartbeat_timeout_ms: 300
+  election_delay_ms: 50

@@ -1,0 +1,30 @@
+name: coordinator_failure
+duration_seconds: 20
+random_seed: 43
+nodes:
+  - {id: 1, drift_ppm: 0}
+  - {id: 2, drift_ppm: 0}
+  - {id: 3, drift_ppm: 0}
+  - {id: 4, drift_ppm: 0}
+  - {id: 5, drift_ppm: 0}
+  - {id: 6, drift_ppm: 0}
+audio:
+  frame_duration_ms: 20
+  encoded_bitrate_bps: 24000
+  max_queue_frames: 4
+  deadline_ms: 100
+radio:
+  bitrate_bps: 500000
+  overhead_bytes: 16
+  preamble_us: 100
+  propagation_delay_us: 2
+schedule:
+  slot_spacing_us: 2500
+protocol:
+  initial_coordinator_id: 1
+  heartbeat_interval_ms: 100
+  heartbeat_timeout_ms: 300
+  election_delay_ms: 50
+faults:
+  - {time_seconds: 5, action: disable_node, node_id: 1}
+  - {time_seconds: 12, action: enable_node, node_id: 1}

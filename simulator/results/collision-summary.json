@@ -1,0 +1,10 @@
+{
+  "generated": 600,
+  "delivered": 0,
+  "collided": 600,
+  "delivery_ratio": 0.0,
+  "mean_latency_us": null,
+  "p95_latency_us": null,
+  "p99_latency_us": null,
+  "max_latency_us": null
+}

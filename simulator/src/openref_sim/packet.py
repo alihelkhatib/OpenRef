@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
+
+
+class PacketKind(str, Enum):
+    VOICE = "voice"
+    HEARTBEAT = "heartbeat"
 
 
 @dataclass(frozen=True)
@@ -10,14 +16,10 @@ class Packet:
     sequence: int
     created_at_us: int
     payload_bytes: int
+    kind: PacketKind = PacketKind.VOICE
 
 
-def packet_airtime_us(
-    payload_bytes: int,
-    bitrate_bps: int,
-    overhead_bytes: int,
-    preamble_us: int = 0,
-) -> int:
+def packet_airtime_us(payload_bytes: int, bitrate_bps: int, overhead_bytes: int, preamble_us: int = 0) -> int:
     if payload_bytes < 0 or overhead_bytes < 0:
         raise ValueError("Byte counts must be nonnegative")
     if bitrate_bps <= 0:

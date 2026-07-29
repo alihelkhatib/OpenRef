@@ -1,0 +1,10 @@
+{
+  "generated": 3000,
+  "delivered": 3000,
+  "collided": 0,
+  "delivery_ratio": 1.0,
+  "mean_latency_us": 1318.0,
+  "p95_latency_us": 1318.0,
+  "p99_latency_us": 1318.0,
+  "max_latency_us": 1318
+}
