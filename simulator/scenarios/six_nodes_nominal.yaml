@@ -1,0 +1,16 @@
+name: six_nodes_nominal
+duration_seconds: 10
+nodes: 6
+
+audio:
+  frame_duration_ms: 20
+  encoded_bitrate_bps: 24000
+
+radio:
+  bitrate_bps: 500000
+  overhead_bytes: 16
+  preamble_us: 100
+  propagation_delay_us: 2
+
+schedule:
+  slot_spacing_us: 2500
