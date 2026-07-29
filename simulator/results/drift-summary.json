@@ -1,0 +1,16 @@
+{
+  "generated": 36000,
+  "delivered": 35958,
+  "collided": 0,
+  "randomly_lost": 42,
+  "queue_overflows": 0,
+  "audio_deadline_misses": 0,
+  "delivery_ratio": 0.9988333333333334,
+  "mean_latency_us": 1318.0,
+  "p95_latency_us": 1318.0,
+  "p99_latency_us": 1318.0,
+  "max_latency_us": 1318,
+  "max_queue_depth": 1,
+  "coordinator_changes": 0,
+  "coordinator_recovery_time_us": null
+}
