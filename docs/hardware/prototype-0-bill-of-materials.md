@@ -73,3 +73,14 @@ Do not buy duplicates if already available:
 ## Safety Note
 
 Prototype audio output shall begin into resistive loads or measurement equipment. Human listening tests require conservative gain, output limiting, and a verified maximum level.
+
+## Support Fixture Option
+
+A simple Prototype 0 support fixture PCB may be started before radio results if
+it is limited to measurement, audio-load, GPIO breakout, and fault-injection
+support.
+
+See:
+
+- [PCB Development Plan](pcb-development-plan.md)
+- [Prototype 0 Support Hardware](../../hardware/prototype0-support/README.md)

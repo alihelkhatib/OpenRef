@@ -46,6 +46,8 @@ Not selected because Prototype 0 must control medium access, multicast behavior,
 
 Not selected because high throughput does not offset contention, power, and body-worn coexistence uncertainty for the primary experiment.
 
+See [ADR-0005](ADR-0005-esp32-wroom-role.md) for the specific ESP32-WROOM role decision.
+
 ### LoRa as the voice waveform
 
 Not selected because long-airtime, low-rate modes are unsuitable for six simultaneous interactive voice sources.
