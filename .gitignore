@@ -1,1 +1,46 @@
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.pytest-tmp/
+.cache/
+.venv/
+venv/
+
+# Python packaging/build output
+*.egg-info/
+build/
+dist/
+*.egg
+
+# Generated simulator output
+simulator/results/*
+!simulator/results/README.md
+
+# Firmware generated output and local measurements
+firmware/**/build/
+firmware/**/Debug/
+firmware/**/Release/
+firmware/**/.settings/
+firmware/**/.metadata/
+firmware/**/*.log
+firmware/**/*.csv
+firmware/**/*.json
+firmware/**/*.bin
+firmware/**/*.hex
+firmware/**/*.elf
+firmware/**/*.map
+firmware/**/results/*
+!firmware/**/results/README.md
+
+# Hardware generated fabrication/export output
+hardware/**/generated/
+hardware/**/*.zip
+hardware/**/*.gbr
+hardware/**/*.drl
+hardware/**/*.pos
+hardware/**/*.step
+hardware/**/*.wrl
