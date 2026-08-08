@@ -1,0 +1,6 @@
+event,local_time_us,node_id,sequence,result,detail
+boot,0,2,0,ok,reset=power_on
+rx_done,1000,2,1,ok,source=1 rssi=-45 lqi=220 crc=1
+rx_done,2000,2,2,ok,source=1 rssi=-46 lqi=219 crc=1
+rx_done,5000,2,5,ok,source=1 rssi=-47 lqi=218 crc=1
+rx_gap,5000,2,5,ok,expected=3 received=5
