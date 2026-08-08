@@ -1,8 +1,0 @@
-Metadata-Version: 2.4
-Name: openref-sim
-Version: 0.2.0
-Summary: Deterministic discrete-event simulator for OpenRef radio scheduling and recovery
-Requires-Python: >=3.11
-Requires-Dist: PyYAML>=6.0
-Provides-Extra: dev
-Requires-Dist: pytest>=8.0; extra == "dev"

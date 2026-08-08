@@ -1,7 +1,10 @@
+from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from openref_sim.run import run_scenario
-from openref_sim.scenario import load_scenario
+from openref_sim.scenario import FaultSpec, load_scenario
 
 SCENARIOS = Path(__file__).parents[1] / "scenarios"
 
@@ -25,3 +28,23 @@ def test_drift_scenario_is_deterministic() -> None:
     _, first = run_scenario(scenario)
     _, second = run_scenario(scenario)
     assert first == second
+
+
+def test_unknown_fault_node_fails_loudly() -> None:
+    scenario = replace(
+        load_scenario(SCENARIOS / "six_nodes_nominal.yaml"),
+        faults=(FaultSpec(action="disable_node", time_us=1_000, node_id=99),),
+    )
+
+    with pytest.raises(ValueError, match="unknown node_id"):
+        run_scenario(scenario)
+
+
+def test_unknown_fault_action_fails_loudly() -> None:
+    scenario = replace(
+        load_scenario(SCENARIOS / "six_nodes_nominal.yaml"),
+        faults=(FaultSpec(action="brownout", time_us=1_000),),
+    )
+
+    with pytest.raises(ValueError, match="Unknown fault action"):
+        run_scenario(scenario)

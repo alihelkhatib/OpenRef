@@ -8,7 +8,7 @@ from pathlib import Path
 from .events import TraceEvent
 
 
-def percentile(values: list[int], p: float):
+def percentile(values: list[int], p: float) -> float | None:
     if not values:
         return None
     ordered = sorted(values)
@@ -20,7 +20,7 @@ def percentile(values: list[int], p: float):
     return ordered[low] * (1 - fraction) + ordered[high] * fraction
 
 
-def summarize(trace: list[TraceEvent]):
+def summarize(trace: list[TraceEvent]) -> dict[str, object]:
     generated = sum(e.event == "voice_frame_generated" for e in trace)
     delivered_events = [e for e in trace if e.event == "packet_delivered" and e.details.get("kind") == "voice"]
     collided = sum(e.event == "packet_collided" and e.details.get("kind") == "voice" for e in trace)
@@ -45,7 +45,10 @@ def summarize(trace: list[TraceEvent]):
         "max_latency_us": max(latencies) if latencies else None,
         "max_queue_depth": max(depths) if depths else 0,
         "coordinator_changes": len(coordinator_changes),
-        "coordinator_recovery_time_us": max((int(e.details.get("recovery_time_us", 0)) for e in coordinator_changes), default=None),
+        "coordinator_recovery_time_us": max(
+            (int(e.details.get("recovery_time_us", 0)) for e in coordinator_changes),
+            default=None,
+        ),
     }
 
 
@@ -53,7 +56,18 @@ def write_trace_csv(trace: list[TraceEvent], path: str | Path) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=["time_us", "event", "node_id", "packet_id", "details_json"])
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=["time_us", "event", "node_id", "packet_id", "details_json"],
+        )
         writer.writeheader()
         for event in trace:
-            writer.writerow({"time_us": event.time_us, "event": event.event, "node_id": event.node_id, "packet_id": event.packet_id, "details_json": json.dumps(event.details, sort_keys=True)})
+            writer.writerow(
+                {
+                    "time_us": event.time_us,
+                    "event": event.event,
+                    "node_id": event.node_id,
+                    "packet_id": event.packet_id,
+                    "details_json": json.dumps(event.details, sort_keys=True),
+                }
+            )
