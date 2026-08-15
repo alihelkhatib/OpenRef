@@ -1,0 +1,41 @@
+#ifndef OPENREF_RESET_CAUSE_FG23_H
+#define OPENREF_RESET_CAUSE_FG23_H
+
+#include <stdbool.h>
+#include <stdint.h>
+
+enum {
+    OPENREF_FG23_RESET_RAW_POR = UINT32_C(0x00000001),
+    OPENREF_FG23_RESET_RAW_PIN = UINT32_C(0x00000002),
+    OPENREF_FG23_RESET_RAW_EM4 = UINT32_C(0x00000004),
+    OPENREF_FG23_RESET_RAW_WDOG0 = UINT32_C(0x00000008),
+    OPENREF_FG23_RESET_RAW_WDOG1 = UINT32_C(0x00000010),
+    OPENREF_FG23_RESET_RAW_LOCKUP = UINT32_C(0x00000020),
+    OPENREF_FG23_RESET_RAW_SYSREQ = UINT32_C(0x00000040),
+    OPENREF_FG23_RESET_RAW_BROWNOUT = UINT32_C(0x00000f80),
+    OPENREF_FG23_RESET_RAW_SECURITY = UINT32_C(0x00002000),
+    OPENREF_FG23_RESET_RAW_VREGIN = UINT32_C(0x80000000),
+};
+
+enum {
+    OPENREF_RESET_CAUSE_POWER_ON = (1u << 0),
+    OPENREF_RESET_CAUSE_EXTERNAL_PIN = (1u << 1),
+    OPENREF_RESET_CAUSE_LOW_POWER_WAKE = (1u << 2),
+    OPENREF_RESET_CAUSE_WATCHDOG = (1u << 3),
+    OPENREF_RESET_CAUSE_CORE_LOCKUP = (1u << 4),
+    OPENREF_RESET_CAUSE_SOFTWARE = (1u << 5),
+    OPENREF_RESET_CAUSE_BROWNOUT = (1u << 6),
+    OPENREF_RESET_CAUSE_SECURITY = (1u << 7),
+    OPENREF_RESET_CAUSE_UNKNOWN = (1u << 31),
+};
+
+typedef struct {
+    uint32_t raw;
+    uint32_t classified;
+    bool captured;
+} openref_reset_cause_fg23_t;
+
+uint32_t openref_reset_cause_fg23_classify(uint32_t raw);
+bool openref_reset_cause_fg23_capture(openref_reset_cause_fg23_t *cause);
+
+#endif

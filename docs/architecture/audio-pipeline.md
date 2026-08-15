@@ -60,6 +60,20 @@ The mixer shall:
 - apply gain normalization or limiting without pumping;
 - avoid allowing one failed source to dominate the mix.
 
+The portable Prototype 0 mixer processes fixed 160-sample (10 ms at 16 kHz)
+blocks from five remote decoders. Each source has an explicit Q15 gain. A
+block-peak limiter applies immediate attack and controlled release, and reports
+limited blocks, pre-limit peak, and any final saturation. Missing sources are
+excluded using a validity mask; stale audio is never substituted. The
+implementation is `firmware/audio_processor/common/openref_audio_mixer.h/.c`.
+
+Receive playout uses a four-packet static queue per source. Each 20 ms radio
+payload is split into two independently valid 10 ms codec frames. Sequence gaps
+or invalid halves generate explicit PLC requests, while duplicate and stale
+packets are discarded. The implementation reports accepted, duplicate, stale,
+overrun, delivered, and PLC counts per source in
+`firmware/audio_processor/common/openref_audio_playout.h/.c`.
+
 ## Wind and Handling Noise
 
 The baseline approach shall combine:

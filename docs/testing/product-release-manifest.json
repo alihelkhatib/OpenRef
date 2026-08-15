@@ -1,0 +1,23 @@
+{
+  "schema": "openref-product-release-v1",
+  "product": "OpenRef",
+  "release_version": null,
+  "hardware_revision": null,
+  "radio_firmware_sha256": null,
+  "audio_firmware_sha256": null,
+  "system_firmware_sha256": null,
+  "created_utc": null,
+  "status": "BLOCKED",
+  "gates": [
+    {"id": "NETWORK_RADIO", "status": "BLOCKED", "required_tests": ["AV-001", "AV-002", "AV-003", "AV-004", "AV-005", "AV-006", "AV-007", "AV-024", "AV-026", "AV-027", "AV-032", "AV-040"], "blocker": "external timing, four-board load, body placement and live security evidence pending", "evidence": []},
+    {"id": "AUDIO", "status": "BLOCKED", "required_tests": ["AV-001", "AV-002", "AV-008", "AV-018", "AV-019", "AV-031", "AV-039"], "blocker": "RT595, headset, acoustic safety and integrated latency evidence pending", "evidence": []},
+    {"id": "POWER_CHARGING", "status": "BLOCKED", "required_tests": ["AV-009", "AV-010", "AV-011", "AV-023", "AV-034", "AV-035", "AV-037", "AV-039"], "blocker": "measured load, cell, charger and fault-injection evidence pending", "evidence": []},
+    {"id": "FIRMWARE_SECURITY_SERVICE", "status": "BLOCKED", "required_tests": ["AV-004", "AV-007", "AV-012", "AV-013", "AV-014", "AV-021", "AV-022", "AV-025", "AV-028", "AV-033", "AV-037", "AV-039", "AV-040"], "blocker": "target backends and physical reset, power-cut, update and authorization evidence pending", "evidence": []},
+    {"id": "MECHANICAL_ENVIRONMENTAL", "status": "BLOCKED", "required_tests": ["AV-015", "AV-016", "AV-017", "AV-018", "AV-036"], "blocker": "body-worn mockup, enclosure and environmental prototypes pending", "evidence": []},
+    {"id": "HUMAN_FACTORS_STATUS", "status": "BLOCKED", "required_tests": ["AV-003", "AV-017", "AV-019", "AV-038"], "blocker": "wet/glove, visibility, controls, formation and safe-listening studies pending", "evidence": []},
+    {"id": "MANUFACTURING_IDENTITY", "status": "BLOCKED", "required_tests": ["AV-020"], "blocker": "pilot fixture, secure identity backend and production units pending", "evidence": []},
+    {"id": "REGULATORY_RF", "status": "BLOCKED", "required_tests": ["AV-024", "AV-030"], "blocker": "final antenna/enclosure and U.S. authorization testing pending", "evidence": []},
+    {"id": "RELEASE_DOCUMENTATION", "status": "BLOCKED", "required_tests": ["AV-029"], "blocker": "release candidate does not yet exist", "evidence": []},
+    {"id": "INTEGRATED_PRODUCT", "status": "BLOCKED", "required_tests": ["AV-001", "AV-002", "AV-004", "AV-005", "AV-006", "AV-008", "AV-009", "AV-011", "AV-026", "AV-027", "AV-037", "AV-038", "AV-039", "AV-040"], "blocker": "integrated wearable hardware is not yet available", "evidence": []}
+  ]
+}

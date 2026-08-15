@@ -11,3 +11,4 @@
 | DEC-004 | 2026-07-29 | Baseline crew size is six simultaneous full-duplex users. | Accepted |
 | DEC-005 | 2026-07-29 | The primary battery is user-replaceable. | Accepted |
 | DEC-006 | 2026-07-29 | Coordinated distributed topology is the current baseline for prototyping. | Proposed |
+| DEC-007 | 2026-08-14 | The FG23 remains the radio processor; MIMXRT595-EVK is the separate audio validation platform. | Accepted for prototype |

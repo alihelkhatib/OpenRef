@@ -1,7 +1,7 @@
 # Prototype 0 Bill of Materials
 
 **Document ID:** OR-HW-002  
-**Revision:** 0.2  
+**Revision:** 0.3
 **Status:** Initial purchasing plan; verify price and availability immediately before purchase
 
 ## Required Six-Node Set
@@ -20,6 +20,16 @@
 | RF attenuators and coax accessories | 1 set | Controlled RF tests where supported |
 | RF shielding boxes or conductive test containers | 2 | Isolation and loss/rejoin testing |
 | Resistive audio loads | 6 | Safe initial audio-output testing |
+
+## Audio Architecture Validation
+
+| Item | Initial quantity | Purpose |
+|---|---:|---|
+| NXP MIMXRT595-EVK | 1 | LC3, five-source mixer, onboard microphone, headphone, power, and FG23 SPI-link validation |
+
+Buy one audio board first. Additional audio nodes are not justified until it
+passes the timing, memory, loopback, link-fault, and current exit tests in
+ADR-0006. The board is a validation platform rather than a production part.
 
 ## Purchase Order
 

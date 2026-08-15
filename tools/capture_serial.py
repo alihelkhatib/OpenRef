@@ -36,6 +36,7 @@ def capture(
     duration_seconds: float | None,
     send_line: str | None,
     append: bool,
+    reset_input_buffer: bool,
 ) -> str:
     serial, _ = _load_serial()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -43,6 +44,8 @@ def capture(
     captured = []
 
     with serial.Serial(port=port, baudrate=baud, timeout=0.5) as handle:
+        if reset_input_buffer:
+            handle.reset_input_buffer()
         if send_line is not None:
             handle.write(f"{send_line}\r\n".encode("utf-8"))
             handle.flush()
@@ -88,6 +91,11 @@ def main() -> None:
         action="store_true",
         help="append to the output log instead of overwriting it",
     )
+    parser.add_argument(
+        "--reset-input-buffer",
+        action="store_true",
+        help="discard bytes queued before the capture starts",
+    )
     args = parser.parse_args()
 
     if args.list:
@@ -102,6 +110,7 @@ def main() -> None:
         duration_seconds=args.duration_seconds,
         send_line=args.send_line,
         append=args.append,
+        reset_input_buffer=args.reset_input_buffer,
     )
 
 

@@ -31,8 +31,11 @@ class Scenario:
     encoded_bitrate_bps: int
     radio_bitrate_bps: int
     overhead_bytes: int
+    security_overhead_bytes: int
+    fixed_length_packets: bool
     preamble_us: int
     slot_spacing_us: int
+    schedule_slots: int
     propagation_delay_us: int
     random_seed: int = 1
     packet_loss_probability: float = 0.0
@@ -56,6 +59,15 @@ class Scenario:
     def payload_bytes(self) -> int:
         bits = self.encoded_bitrate_bps * self.frame_duration_ms / 1_000
         return round(bits / 8)
+
+    @property
+    def wire_payload_bytes(self) -> int:
+        return self.payload_bytes + self.security_overhead_bytes
+
+    @property
+    def heartbeat_wire_payload_bytes(self) -> int:
+        plaintext_bytes = self.payload_bytes if self.fixed_length_packets else 8
+        return plaintext_bytes + self.security_overhead_bytes
 
     @property
     def duration_us(self) -> int:
@@ -113,8 +125,11 @@ def load_scenario(path: str | Path) -> Scenario:
         encoded_bitrate_bps=int(data["audio"]["encoded_bitrate_bps"]),
         radio_bitrate_bps=int(data["radio"]["bitrate_bps"]),
         overhead_bytes=int(data["radio"].get("overhead_bytes", 16)),
+        security_overhead_bytes=int(data["radio"].get("security_overhead_bytes", 0)),
+        fixed_length_packets=bool(data["radio"].get("fixed_length_packets", False)),
         preamble_us=int(data["radio"].get("preamble_us", 0)),
         slot_spacing_us=int(data["schedule"]["slot_spacing_us"]),
+        schedule_slots=int(data["schedule"].get("total_slots", len(_nodes(data["nodes"])))),
         propagation_delay_us=int(data["radio"].get("propagation_delay_us", 2)),
         random_seed=int(data.get("random_seed", 1)),
         packet_loss_probability=float(data["radio"].get("packet_loss_probability", 0.0)),

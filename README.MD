@@ -31,6 +31,10 @@ See [docs/program/program-status.md](docs/program/program-status.md) and
 | `mechanical/` | Mechanical and enclosure workspace placeholder. |
 | `software/` | Desktop/mobile/service software workspace placeholder. |
 | `tools/` | Engineering scripts and local tooling workspace placeholder. |
+| `artifacts/` | Local run-data convention and external archival guidance. |
+
+See [Repository and Evidence Workflow](docs/program/repository-workflow.md) for
+where generated bench output belongs and how milestone evidence is archived.
 
 ## Simulator Quick Start
 

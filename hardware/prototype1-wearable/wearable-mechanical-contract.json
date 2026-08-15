@@ -1,0 +1,50 @@
+{
+  "document_id": "OR-HW-009",
+  "revision": 1,
+  "status": "controlled mechanical interface baseline; dimensional decisions pending physical mockup",
+  "product_configuration": {
+    "wear_location": null,
+    "mounting_orientation": null,
+    "maximum_envelope_mm": {"x": null, "y": null, "z": null},
+    "target_mass_g": null,
+    "minimum_sealing_objective": null,
+    "service_configuration_defined": false
+  },
+  "placement_decisions": {
+    "antenna_location": null,
+    "battery_location": null,
+    "headset_connector_location": null,
+    "control_location": null,
+    "status_visibility_direction": null
+  },
+  "zones": [
+    {"id": "ANTENNA", "required": true, "excludes": ["BATTERY", "HEADSET_CABLE", "DEBUG", "SWITCHING_POWER", "HAPTIC"], "dimensions_source": "selected antenna reference design plus body-loss results"},
+    {"id": "BATTERY", "required": true, "excludes": ["ANTENNA"], "dimensions_source": "selected protected pack drawing plus retention clearances"},
+    {"id": "AUDIO_ANALOG", "required": true, "excludes": ["SWITCHING_POWER", "HAPTIC", "HIGH_EDGE_DIGITAL"], "dimensions_source": "codec and headset layout review"},
+    {"id": "USER_CONTROLS", "required": true, "excludes": ["SERVICE_ACCESS"], "dimensions_source": "wet-hand, glove and accidental-activation mockup"},
+    {"id": "SERVICE_ACCESS", "required": true, "excludes": ["NORMAL_WEARER_ACCESS"], "dimensions_source": "fixture and service procedure"}
+  ],
+  "interfaces": [
+    {"id": "BATTERY", "removable": true, "external_charging_only": true, "polarized": true, "retention_required": true, "seal_boundary_required": true},
+    {"id": "HEADSET", "replaceable": true, "strain_relief_required": true, "wet_mate_behavior_tested": true, "seal_boundary_required": true},
+    {"id": "CONTROLS", "wet_glove_operable": true, "accidental_activation_tested": true, "seal_boundary_required": true},
+    {"id": "SERVICE", "wearer_inaccessible": true, "fixture_accessible": true, "seal_restored_after_service": true},
+    {"id": "MOUNT", "running_retention_tested": true, "direction_change_tested": true, "breakaway_decision_required": true}
+  ],
+  "safety_constraints": {
+    "no_sharp_edges_normal_or_damaged": true,
+    "battery_cannot_become_projectile": true,
+    "antenna_clearance_preserved_when_worn": true,
+    "headset_load_not_transferred_to_pcb_joint": true,
+    "service_contacts_inaccessible_during_wear": true,
+    "vents_or_openings_do_not_drain_into_electronics": true
+  },
+  "required_verification": [
+    {"test_id": "AV-015", "evidence": "rain, sweat and incidental mud exposure"},
+    {"test_id": "AV-016", "evidence": "drop and battery retention"},
+    {"test_id": "AV-017", "evidence": "wet hand, glove and accidental controls"},
+    {"test_id": "AV-018", "evidence": "headset disconnect, fault and wet leakage"},
+    {"test_id": "AV-019", "evidence": "listening-level limit in final acoustic assembly"},
+    {"test_id": "AV-036", "evidence": "mount retention, strain relief and damaged-edge inspection"}
+  ]
+}

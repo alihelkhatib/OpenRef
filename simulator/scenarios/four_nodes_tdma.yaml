@@ -1,0 +1,25 @@
+name: four_nodes_tdma
+duration_seconds: 10
+nodes: 4
+
+audio:
+  frame_duration_ms: 20
+  encoded_bitrate_bps: 24000
+  deadline_ms: 100
+  max_queue_frames: 2
+
+radio:
+  bitrate_bps: 500000
+  overhead_bytes: 18
+  preamble_us: 100
+  propagation_delay_us: 2
+
+schedule:
+  slot_spacing_us: 2500
+  total_slots: 6
+
+protocol:
+  initial_coordinator_id: 1
+  heartbeat_interval_ms: 100
+  heartbeat_timeout_ms: 300
+  election_delay_ms: 50

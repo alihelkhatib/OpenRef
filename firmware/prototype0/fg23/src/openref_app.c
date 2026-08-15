@@ -4,7 +4,23 @@
 
 #include "openref_packet_pair.h"
 
-#if defined(OPENREF_APP_AUTOTX) || defined(OPENREF_APP_AUTORX) || defined(OPENREF_APP_AUTOROLE)
+#ifdef OPENREF_APP_NETWORK
+#include "openref_network_fg23.h"
+#endif
+#ifdef OPENREF_APP_LC3_BENCHMARK
+#include "openref_lc3_benchmark.h"
+#endif
+#ifdef OPENREF_APP_WATCHDOG_FG23
+#include "openref_watchdog_fg23.h"
+#endif
+#ifdef OPENREF_APP_RESET_CAUSE_FG23
+#include "openref_reset_cause_fg23.h"
+#endif
+#if defined(OPENREF_GPIO_WATCHDOG_HANG_PORT) || defined(OPENREF_GPIO_WATCHDOG_BOOT_PORT)
+#include "em_gpio.h"
+#endif
+
+#if defined(OPENREF_APP_AUTOTX) || defined(OPENREF_APP_AUTORX) || defined(OPENREF_APP_AUTOROLE) || defined(OPENREF_APP_NETWORK) || defined(OPENREF_APP_WATCHDOG_FG23)
 #include "app_common.h"
 #endif
 
@@ -20,6 +36,112 @@
 #define OPENREF_APP_SCHEDTX_DEFAULT_ATTEMPTS 100u
 
 static openref_packet_pair_state_t app_state;
+
+#ifdef OPENREF_APP_RESET_CAUSE_FG23
+static openref_reset_cause_fg23_t reset_cause;
+
+static void openref_app_report_reset_cause(void)
+{
+    if (openref_reset_cause_fg23_capture(&reset_cause)) {
+        printf("\r\n{{(openrefReset)}{Raw:0x%08lx}{Classified:0x%08lx}{Watchdog:%u}}}\r\n",
+               (unsigned long)reset_cause.raw,
+               (unsigned long)reset_cause.classified,
+               (reset_cause.classified & OPENREF_RESET_CAUSE_WATCHDOG) != 0u ? 1u : 0u);
+    } else {
+        printf("\r\n{{(openrefReset)}{Status:CaptureFail}}}\r\n");
+    }
+}
+#else
+static void openref_app_report_reset_cause(void) {}
+#endif
+
+#ifdef OPENREF_APP_WATCHDOG_FG23
+#define OPENREF_APP_WATCHDOG_TASK_MAIN 0u
+#define OPENREF_APP_WATCHDOG_TASK_TIMEOUT_MS 500u
+#define OPENREF_APP_WATCHDOG_STARTUP_GRACE_MS 1000u
+#define OPENREF_APP_WATCHDOG_HARDWARE_TIMEOUT_MS 1025u
+#if defined(OPENREF_APP_WATCHDOG_TEST_HANG_AFTER_FEEDS) && \
+    OPENREF_APP_WATCHDOG_TEST_HANG_AFTER_FEEDS == 0
+#error "OPENREF_APP_WATCHDOG_TEST_HANG_AFTER_FEEDS must be greater than zero"
+#endif
+static openref_watchdog_driver_t watchdog_driver;
+static openref_watchdog_fg23_t watchdog_target;
+static openref_watchdog_fg23_clock_t watchdog_clock;
+static bool watchdog_ready;
+
+static void openref_app_watchdog_markers_init(void)
+{
+#ifdef OPENREF_GPIO_WATCHDOG_HANG_PORT
+    GPIO_PinModeSet(OPENREF_GPIO_WATCHDOG_HANG_PORT,
+                    OPENREF_GPIO_WATCHDOG_HANG_PIN, gpioModePushPull, 0);
+#endif
+#ifdef OPENREF_GPIO_WATCHDOG_BOOT_PORT
+    GPIO_PinModeSet(OPENREF_GPIO_WATCHDOG_BOOT_PORT,
+                    OPENREF_GPIO_WATCHDOG_BOOT_PIN, gpioModePushPull, 0);
+    GPIO_PinOutSet(OPENREF_GPIO_WATCHDOG_BOOT_PORT,
+                   OPENREF_GPIO_WATCHDOG_BOOT_PIN);
+    GPIO_PinOutClear(OPENREF_GPIO_WATCHDOG_BOOT_PORT,
+                     OPENREF_GPIO_WATCHDOG_BOOT_PIN);
+#endif
+}
+
+static uint64_t openref_app_watchdog_now_ms(void)
+{
+    return openref_watchdog_fg23_monotonic_ms(&watchdog_clock, RAIL_GetTime());
+}
+
+static void openref_app_watchdog_init(void)
+{
+    openref_watchdog_gate_config_t config = {0};
+    uint64_t now_ms = openref_app_watchdog_now_ms();
+    config.required_mask = (uint8_t)(1u << OPENREF_APP_WATCHDOG_TASK_MAIN);
+    config.startup_grace_ms = OPENREF_APP_WATCHDOG_STARTUP_GRACE_MS;
+    config.task_timeout_ms[OPENREF_APP_WATCHDOG_TASK_MAIN] =
+        OPENREF_APP_WATCHDOG_TASK_TIMEOUT_MS;
+    watchdog_ready = openref_watchdog_driver_init(
+        &watchdog_driver,
+        &config,
+        openref_watchdog_fg23_backend(&watchdog_target),
+        OPENREF_APP_WATCHDOG_HARDWARE_TIMEOUT_MS,
+        now_ms);
+    printf("\r\n{{(openrefWatchdog)}{Status:%s}{RequestedMs:%lu}{EffectiveMs:%lu}}}\r\n",
+           watchdog_ready ? "Armed" : "InitFail",
+           (unsigned long)OPENREF_APP_WATCHDOG_HARDWARE_TIMEOUT_MS,
+           (unsigned long)watchdog_target.effective_timeout_ms);
+}
+
+static void openref_app_watchdog_progress(void)
+{
+    uint64_t now_ms;
+    if (!watchdog_ready) {
+        return;
+    }
+    now_ms = openref_app_watchdog_now_ms();
+    if (!openref_watchdog_driver_report(
+            &watchdog_driver, OPENREF_APP_WATCHDOG_TASK_MAIN, now_ms) ||
+        !openref_watchdog_driver_tick(&watchdog_driver, now_ms)) {
+        watchdog_ready = false;
+        return;
+    }
+#ifdef OPENREF_APP_WATCHDOG_TEST_HANG_AFTER_FEEDS
+    if (watchdog_driver.hardware_feed_count >=
+        OPENREF_APP_WATCHDOG_TEST_HANG_AFTER_FEEDS) {
+        printf("\r\n{{(openrefWatchdog)}{Status:InjectedHang}{Feeds:%lu}}}\r\n",
+               (unsigned long)watchdog_driver.hardware_feed_count);
+#ifdef OPENREF_GPIO_WATCHDOG_HANG_PORT
+        GPIO_PinOutSet(OPENREF_GPIO_WATCHDOG_HANG_PORT,
+                       OPENREF_GPIO_WATCHDOG_HANG_PIN);
+#endif
+        for (;;) {
+        }
+    }
+#endif
+}
+#else
+static void openref_app_watchdog_init(void) {}
+static void openref_app_watchdog_progress(void) {}
+static void openref_app_watchdog_markers_init(void) {}
+#endif
 
 #if defined(OPENREF_APP_AUTOTX) || defined(OPENREF_APP_AUTOROLE)
 static bool autotx_configured;
@@ -126,6 +248,8 @@ void openref_app_init(void)
 {
     uint8_t packet[OPENREF_PACKET_PAIR_MAX_PACKET_BYTES];
 
+    openref_app_watchdog_markers_init();
+    openref_app_report_reset_cause();
     openref_packet_pair_init_state(&app_state);
     uint16_t length = openref_packet_pair_build_ping(
         &app_state,
@@ -141,10 +265,26 @@ void openref_app_init(void)
            (unsigned int)app_state.sequence);
 
     openref_packet_pair_init_state(&app_state);
+
+#ifdef OPENREF_APP_NETWORK
+    openref_network_fg23_init();
+#endif
+#ifdef OPENREF_APP_LC3_BENCHMARK
+    openref_lc3_benchmark_init();
+#endif
+    openref_app_watchdog_init();
 }
 
 void openref_app_process_action(void)
 {
+#ifdef OPENREF_APP_NETWORK
+    openref_network_fg23_process();
+#ifdef OPENREF_APP_LC3_BENCHMARK
+    openref_lc3_benchmark_process();
+#endif
+    openref_app_watchdog_progress();
+    return;
+#endif
 #ifdef OPENREF_APP_AUTOROLE
     if (openref_app_role != active_role) {
         active_role = openref_app_role;
@@ -465,4 +605,5 @@ void openref_app_process_action(void)
     }
     }
 #endif
+    openref_app_watchdog_progress();
 }

@@ -5,6 +5,21 @@ param(
     [switch]$EnableAutoTx,
     [switch]$EnableAutoRx,
     [switch]$EnableAutoRole,
+    [switch]$EnableNetwork,
+    [switch]$EnableSecureNetwork,
+    [switch]$EnablePersistentEpoch,
+    [switch]$EnablePersistentSecurityCounters,
+    [switch]$EnablePersistentConfig,
+    [switch]$EnablePersistentBootState,
+    [switch]$EnablePersistentDeviceRecord,
+    [switch]$EnableHardwareWatchdog,
+    [uint32]$WatchdogTestHangAfterFeeds = 0,
+    [string]$WatchdogHangMarker = "",
+    [string]$WatchdogBootMarker = "",
+    [ValidateRange(1, 6)]
+    [int]$NetworkNodeId = 1,
+    [switch]$EnableLc3Benchmark,
+    [string]$Lc3Root = "",
     [switch]$EnableGpioMarkers,
     [string]$BuildMarker = "",
     [string]$QueueMarker = "",
@@ -66,10 +81,66 @@ New-Item -ItemType Directory -Force -Path $overlayFg23 | Out-Null
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_proto0_packet.h") -Destination $overlayCommon
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_proto0_packet.c") -Destination $overlayCommon
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_radio.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_network.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_network.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_network_packet.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_network_packet.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_security.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_security.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_boot_counter.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_boot_counter.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_radio_session.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_radio_session.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_secure_startup.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_secure_startup.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_secure_network_packet.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_secure_network_packet.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_secure_transport.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\common\openref_secure_transport.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_config_store.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_config_store.c") -Destination $overlayCommon
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_packet_pair.h") -Destination $overlayFg23
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_packet_pair.c") -Destination $overlayFg23
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_app.h") -Destination $overlayFg23
 Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_app.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_network_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_network_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_lc3_benchmark.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_lc3_benchmark.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_security_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_security_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_boot_counter_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_boot_counter_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_network_epoch_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_network_epoch_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_security_counters_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_security_counters_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_config_store_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_config_store_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_boot_policy.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_boot_policy.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_boot_state_store.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_boot_state_store.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_device_lifecycle.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_device_lifecycle.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_device_record_store.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_device_record_store.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_watchdog_gate.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_watchdog_gate.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_watchdog_driver.h") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\system\common\openref_watchdog_driver.c") -Destination $overlayCommon
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_boot_state_store_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_boot_state_store_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_watchdog_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_watchdog_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_reset_cause_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_reset_cause_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_device_record_store_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_device_record_store_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_radio_session_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_radio_session_fg23.c") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_secure_startup_fg23.h") -Destination $overlayFg23
+Copy-Item -Force -Path (Join-Path $repoRootPath "firmware\prototype0\fg23\src\openref_secure_startup_fg23.c") -Destination $overlayFg23
 
 $cmake = @"
 # OpenRef local overlay. Generated by tools/install_openref_fg23_overlay.ps1.
@@ -77,8 +148,36 @@ $cmake = @"
 
 target_sources(rail_soc_railtest PRIVATE
     `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_proto0_packet.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_network.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_network_packet.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_security.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_boot_counter.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_radio_session.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_secure_startup.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_secure_network_packet.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_secure_transport.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_config_store.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_boot_policy.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_boot_state_store.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_device_lifecycle.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_device_record_store.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_watchdog_gate.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/common/openref_watchdog_driver.c
     `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_packet_pair.c
     `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_app.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_network_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_lc3_benchmark.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_security_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_boot_counter_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_network_epoch_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_security_counters_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_config_store_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_boot_state_store_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_watchdog_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_reset_cause_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_device_record_store_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_radio_session_fg23.c
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/fg23/openref_secure_startup_fg23.c
 )
 
 target_include_directories(rail_soc_railtest PRIVATE
@@ -110,6 +209,132 @@ if ($EnableAutoRole) {
     $cmake += @"
 
 target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_AUTOROLE=1)
+"@
+}
+
+if ($EnableNetwork) {
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_NETWORK=1 OPENREF_APP_NETWORK_NODE_ID=$NetworkNodeId)
+"@
+}
+
+if ($EnableSecureNetwork) {
+    if (-not $EnableNetwork) {
+        throw "-EnableSecureNetwork requires -EnableNetwork."
+    }
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE
+    OPENREF_APP_NETWORK_SECURITY=1
+    OPENREF_APP_SECURITY=1
+    OPENREF_APP_SECURITY_NVM3=1
+)
+"@
+}
+
+if ($EnablePersistentEpoch) {
+    if (-not $EnableNetwork) {
+        throw "-EnablePersistentEpoch requires -EnableNetwork."
+    }
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_NETWORK_EPOCH_NVM3=1)
+"@
+}
+
+if ($EnablePersistentSecurityCounters) {
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_SECURITY_COUNTERS_NVM3=1)
+"@
+}
+
+if ($EnablePersistentConfig) {
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_CONFIG_NVM3=1)
+"@
+}
+
+if ($EnablePersistentBootState) {
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_BOOT_STATE_NVM3=1)
+"@
+}
+
+if ($EnablePersistentDeviceRecord) {
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_DEVICE_RECORD_NVM3=1)
+"@
+}
+
+if ($EnableHardwareWatchdog) {
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE
+    OPENREF_APP_WATCHDOG_FG23=1
+    OPENREF_APP_RESET_CAUSE_FG23=1
+)
+"@
+}
+
+if ($WatchdogTestHangAfterFeeds -ne 0) {
+    if (-not $EnableHardwareWatchdog) {
+        throw "-WatchdogTestHangAfterFeeds requires -EnableHardwareWatchdog."
+    }
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE OPENREF_APP_WATCHDOG_TEST_HANG_AFTER_FEEDS=$WatchdogTestHangAfterFeeds)
+"@
+}
+
+if (-not [string]::IsNullOrWhiteSpace($WatchdogHangMarker) -or
+    -not [string]::IsNullOrWhiteSpace($WatchdogBootMarker)) {
+    if (-not $EnableHardwareWatchdog) {
+        throw "Watchdog markers require -EnableHardwareWatchdog."
+    }
+    $watchdogMarkerDefinitions = @()
+    $watchdogMarkerDefinitions = Add-OpenRefGpioMarkerDefinitions -Definitions $watchdogMarkerDefinitions -Label "WATCHDOG_HANG" -Marker $WatchdogHangMarker
+    $watchdogMarkerDefinitions = Add-OpenRefGpioMarkerDefinitions -Definitions $watchdogMarkerDefinitions -Label "WATCHDOG_BOOT" -Marker $WatchdogBootMarker
+    $watchdogMarkerDefinitionText = $watchdogMarkerDefinitions -join " "
+    $cmake += @"
+
+target_compile_definitions(rail_soc_railtest PRIVATE $watchdogMarkerDefinitionText)
+"@
+}
+
+if ($EnableLc3Benchmark) {
+    if ([string]::IsNullOrWhiteSpace($Lc3Root)) {
+        throw "-EnableLc3Benchmark requires -Lc3Root pointing to google/liblc3."
+    }
+    $lc3RootPath = Resolve-Path $Lc3Root
+    $lc3Overlay = Join-Path $overlayRoot "lc3"
+    New-Item -ItemType Directory -Force -Path (Join-Path $lc3Overlay "include") | Out-Null
+    New-Item -ItemType Directory -Force -Path (Join-Path $lc3Overlay "src") | Out-Null
+    Copy-Item -Force -Path (Join-Path $lc3RootPath "include\*.h") -Destination (Join-Path $lc3Overlay "include")
+    Copy-Item -Force -Path (Join-Path $lc3RootPath "src\*.h") -Destination (Join-Path $lc3Overlay "src")
+    Copy-Item -Force -Path (Join-Path $lc3RootPath "src\*.c") -Destination (Join-Path $lc3Overlay "src")
+    Copy-Item -Force -Path (Join-Path $lc3RootPath "LICENSE") -Destination $lc3Overlay
+
+    $cmake += @"
+
+file(GLOB OPENREF_LC3_SOURCES CONFIGURE_DEPENDS
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/lc3/src/*.c
+)
+target_sources(rail_soc_railtest PRIVATE `${OPENREF_LC3_SOURCES})
+target_include_directories(rail_soc_railtest PRIVATE
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/lc3/include
+    `${CMAKE_CURRENT_LIST_DIR}/../openref/lc3/src
+)
+target_compile_definitions(rail_soc_railtest PRIVATE
+    OPENREF_APP_LC3_BENCHMARK=1 LC3_PLUS=0 LC3_PLUS_HR=0
+)
+target_compile_definitions(slc PRIVATE SL_STACK_SIZE=8192)
+target_compile_options(rail_soc_railtest PRIVATE -ffast-math)
+target_link_libraries(rail_soc_railtest PRIVATE m)
 "@
 }
 

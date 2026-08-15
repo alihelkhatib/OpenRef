@@ -28,3 +28,4 @@ def test_capture_serial_help() -> None:
 
     assert "Capture OpenRef serial logs" in result.stdout
     assert "--send-line" in result.stdout
+    assert "--reset-input-buffer" in result.stdout

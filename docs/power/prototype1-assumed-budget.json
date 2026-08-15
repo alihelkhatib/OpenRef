@@ -1,0 +1,68 @@
+{
+  "name": "Prototype 1 wearable bounding budget",
+  "status": "ASSUMED - not a measured endurance claim",
+  "target_endurance_h": 10,
+  "battery": {
+    "nominal_voltage_v": 3.7,
+    "capacity_mah": 1500,
+    "capacity_evidence_class": "assumed",
+    "usable_capacity_factors": {
+      "aging": 0.85,
+      "cold_and_variation": 0.90,
+      "warning_and_shutdown": 0.90
+    },
+    "factor_evidence_class": {
+      "aging": "assumed",
+      "cold_and_variation": "assumed",
+      "warning_and_shutdown": "assumed"
+    }
+  },
+  "loads": [
+    {
+      "name": "FGM230S receive-mode baseline",
+      "evidence": "FGM230S datasheet rev 1.2 typical RX at 100 kbps GFSK, 916 MHz; pending OpenRef current-profile capture",
+      "evidence_class": "datasheet",
+      "voltage_v": 3.3,
+      "current_ma": 4.1,
+      "duty_cycle": 0.9165,
+      "conversion_efficiency": 0.90
+    },
+    {
+      "name": "radio MCU scheduling and security overhead",
+      "evidence": "assumed allocation above published radio-mode current pending secured-network current-profile capture",
+      "evidence_class": "assumed",
+      "power_mw": 15.0,
+      "conversion_efficiency": 0.90
+    },
+    {
+      "name": "FG23 transmit at selected power",
+      "evidence": "FGM230S datasheet rev 1.2 typical TX at +14 dBm, 916 MHz; pending OpenRef current-profile capture",
+      "evidence_class": "datasheet",
+      "voltage_v": 3.3,
+      "current_ma": 30.0,
+      "duty_cycle": 0.0835,
+      "conversion_efficiency": 0.90
+    },
+    {
+      "name": "audio processor codec and mixer",
+      "evidence": "assumed allocation pending RT595 benchmark",
+      "evidence_class": "assumed",
+      "power_mw": 100.0,
+      "conversion_efficiency": 0.90
+    },
+    {
+      "name": "microphone codec and headphone path",
+      "evidence": "assumed allocation pending approved-headset load test",
+      "evidence_class": "assumed",
+      "power_mw": 55.0,
+      "conversion_efficiency": 0.88
+    },
+    {
+      "name": "controls status battery monitor and leakage",
+      "evidence": "assumed allocation",
+      "evidence_class": "assumed",
+      "power_mw": 20.0,
+      "conversion_efficiency": 0.90
+    }
+  ]
+}

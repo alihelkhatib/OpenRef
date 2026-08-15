@@ -11,6 +11,10 @@ __pycache__/
 venv/
 .pytest-*
 
+# Local engineering run artifacts. Keep the directory guide, but do not commit
+# raw serial logs, captures, firmware binaries, or machine-specific manifests.
+artifacts/local/
+
 # Python packaging/build output
 *.egg-info/
 build/

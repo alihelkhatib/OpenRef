@@ -1,0 +1,43 @@
+{
+  "contract_id": "OR-HW-005",
+  "revision": 1,
+  "sheets": [
+    {"id": "01", "name": "pack_entry"},
+    {"id": "02", "name": "power_sequence"},
+    {"id": "03", "name": "radio_processor"},
+    {"id": "04", "name": "audio_processor"},
+    {"id": "05", "name": "codec_headset"},
+    {"id": "06", "name": "controls_status"},
+    {"id": "07", "name": "processor_link_test"},
+    {"id": "08", "name": "rf_boundary"}
+  ],
+  "power_domains": [
+    {"name": "VBAT_PROTECTED", "owner_sheet": "01", "switched": false},
+    {"name": "VSYS_BLOCKED", "owner_sheet": "01", "switched": false},
+    {"name": "V_ALWAYS_ON", "owner_sheet": "02", "switched": false},
+    {"name": "V_RADIO", "owner_sheet": "03", "switched": true},
+    {"name": "V_AUDIO", "owner_sheet": "04", "switched": true},
+    {"name": "V_CODEC", "owner_sheet": "05", "switched": true},
+    {"name": "V_HAPTIC", "owner_sheet": "06", "switched": true}
+  ],
+  "signals": [
+    {"name": "AUD_SCLK", "source": "03", "sink": "04", "source_domain": "V_RADIO", "sink_domain": "V_AUDIO", "reset_state": "low", "isolation_required": true, "test_access": true},
+    {"name": "AUD_COPI", "source": "03", "sink": "04", "source_domain": "V_RADIO", "sink_domain": "V_AUDIO", "reset_state": "low", "isolation_required": true, "test_access": true},
+    {"name": "AUD_CIPO", "source": "04", "sink": "03", "source_domain": "V_AUDIO", "sink_domain": "V_RADIO", "reset_state": "high_z", "isolation_required": true, "test_access": true},
+    {"name": "AUD_CSN", "source": "03", "sink": "04", "source_domain": "V_RADIO", "sink_domain": "V_AUDIO", "reset_state": "high", "isolation_required": true, "test_access": true},
+    {"name": "AUD_REQ_N", "source": "04", "sink": "03", "source_domain": "V_AUDIO", "sink_domain": "V_RADIO", "reset_state": "high", "isolation_required": true, "test_access": true},
+    {"name": "AUD_RESET_N", "source": "03", "sink": "04", "source_domain": "V_RADIO", "sink_domain": "V_AUDIO", "reset_state": "low", "isolation_required": true, "test_access": true},
+    {"name": "RADIO_RESET_REQ_N", "source": "04", "sink": "03", "source_domain": "V_AUDIO", "sink_domain": "V_RADIO", "reset_state": "high", "isolation_required": true, "test_access": true},
+    {"name": "RADIO_RESET_N", "source": "02", "sink": "03", "source_domain": "V_ALWAYS_ON", "sink_domain": "V_RADIO", "reset_state": "low", "isolation_required": false, "test_access": true},
+    {"name": "RADIO_EN", "source": "02", "sink": "03", "source_domain": "V_ALWAYS_ON", "sink_domain": "V_RADIO", "reset_state": "low", "isolation_required": false, "test_access": true},
+    {"name": "AUDIO_EN", "source": "02", "sink": "04", "source_domain": "V_ALWAYS_ON", "sink_domain": "V_AUDIO", "reset_state": "low", "isolation_required": false, "test_access": true},
+    {"name": "CODEC_MUTE_N", "source": "02", "sink": "05", "source_domain": "V_ALWAYS_ON", "sink_domain": "V_CODEC", "reset_state": "low", "isolation_required": false, "test_access": true},
+    {"name": "HAPTIC_EN", "source": "03", "sink": "06", "source_domain": "V_RADIO", "sink_domain": "V_HAPTIC", "reset_state": "low", "isolation_required": true, "test_access": true}
+  ],
+  "required_test_points": [
+    "VBAT_PROTECTED", "VSYS_BLOCKED", "V_ALWAYS_ON", "V_RADIO", "V_AUDIO", "V_CODEC", "V_HAPTIC",
+    "AUD_SCLK", "AUD_COPI", "AUD_CIPO", "AUD_CSN", "AUD_REQ_N", "AUD_RESET_N",
+    "RADIO_RESET_N", "RADIO_RESET_REQ_N", "RADIO_EN", "AUDIO_EN", "CODEC_MUTE_N",
+    "RADIO_TX_START", "AUDIO_CAPTURE_READY", "PLAYBACK_COMMIT"
+  ]
+}

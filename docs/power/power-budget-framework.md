@@ -73,3 +73,39 @@ Prototype current shall be measured with:
 - audio idle and worst-case audio processing;
 - representative supply voltage;
 - representative antenna match and output power.
+
+## Executable Prototype 1 Budget
+
+`tools/openref_power_budget.py` evaluates the explicit JSON assumptions in
+`docs/power/prototype1-assumed-budget.json`. The initial 1,500 mAh single-cell
+model allocates 235.5 mW average and applies the aging, environmental, and
+warning reserves multiplicatively, leaving 68.85% usable nominal energy. It
+estimates 16.2 hours and permits at most 382.1 mW average for the 10-hour target.
+
+These are allocation results, not measurements or an endurance claim. The
+executable model validates battery factors and loads with an explicit
+`assumed`, `datasheet`, or `measured` evidence class. It reports
+`release_ready: false` and names every unmeasured input until all release-case
+inputs are measured. A positive arithmetic margin cannot close the gate.
+
+The FGM230S RX and +14 dBm TX entries now use manufacturer typical values and
+are labeled `datasheet`; a separate assumed allowance covers MCU scheduling and
+security overhead. The model's useful early conclusion is that the combined
+loads may rise by about 1.62 times before the 10-hour objective is lost. Each
+non-measured domain must be
+replaced with captured data and evidence metadata before Gate C can close.
+
+Every input labeled `measured` must carry a structured record containing a
+safe relative `artifact_file`, its SHA-256 digest, measurement method,
+instrument identity, and UTC capture time. A measured label or filename alone
+does not close the gate. Release evaluation also requires access to the actual
+evidence directory so the model can re-hash every referenced artifact:
+
+```text
+python tools/openref_power_budget.py MEASURED-BUDGET.json \
+  --evidence-root ARTIFACT-DIRECTORY --require-release
+```
+
+The output separately reports metadata completeness, artifact verification,
+and final release readiness. Missing, escaped, or modified captures prevent
+release even when the arithmetic endurance margin is positive.

@@ -19,13 +19,13 @@ class CapacityEstimate:
 
 def estimate_capacity(scenario: Scenario) -> CapacityEstimate:
     voice_airtime_us = packet_airtime_us(
-        scenario.payload_bytes,
+        scenario.wire_payload_bytes,
         scenario.radio_bitrate_bps,
         scenario.overhead_bytes,
         scenario.preamble_us,
     )
     heartbeat_airtime_us = packet_airtime_us(
-        8,
+        scenario.heartbeat_wire_payload_bytes,
         scenario.radio_bitrate_bps,
         scenario.overhead_bytes,
         scenario.preamble_us,
@@ -41,6 +41,6 @@ def estimate_capacity(scenario: Scenario) -> CapacityEstimate:
         heartbeat_channel_utilization=heartbeat_utilization,
         scheduled_channel_utilization=voice_utilization + heartbeat_utilization,
         slot_guard_us=scenario.slot_spacing_us - voice_airtime_us,
-        schedule_span_us=(scenario.node_count - 1) * scenario.slot_spacing_us
+        schedule_span_us=(scenario.schedule_slots - 1) * scenario.slot_spacing_us
         + voice_airtime_us,
     )

@@ -1,0 +1,14 @@
+#include "openref_audio_capture.h"
+#include "openref_audio_mixer.h"
+#include "openref_audio_pipeline.h"
+#include "openref_audio_playout.h"
+#include "openref_audio_runtime.h"
+
+openref_audio_link_frame_t openref_probe_link_frame;
+openref_audio_link_queue_t openref_probe_link_queue;
+openref_audio_capture_t openref_probe_capture;
+openref_audio_playout_source_t openref_probe_playout_source;
+openref_audio_playout_t openref_probe_playout;
+openref_audio_mixer_t openref_probe_mixer;
+openref_audio_pipeline_t openref_probe_pipeline;
+openref_audio_runtime_t openref_probe_runtime;

@@ -14,7 +14,7 @@ from .scenario import FaultSpec, Scenario
 def _voice_config(scenario: Scenario) -> VoiceConfig:
     return VoiceConfig(
         frame_interval_us=scenario.frame_interval_us,
-        payload_bytes=scenario.payload_bytes,
+        payload_bytes=scenario.wire_payload_bytes,
         bitrate_bps=scenario.radio_bitrate_bps,
         overhead_bytes=scenario.overhead_bytes,
         preamble_us=scenario.preamble_us,
@@ -33,6 +33,7 @@ def _coordinator_config(scenario: Scenario) -> CoordinatorConfig:
         bitrate_bps=scenario.radio_bitrate_bps,
         overhead_bytes=scenario.overhead_bytes,
         preamble_us=scenario.preamble_us,
+        heartbeat_payload_bytes=scenario.heartbeat_wire_payload_bytes,
     )
 
 

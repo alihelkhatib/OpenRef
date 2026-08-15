@@ -1,0 +1,40 @@
+{
+  "record_version": 3,
+  "attempt_id": "required-unique-attempt-id",
+  "started_utc": null,
+  "completed_utc": null,
+  "unit_serial": "required",
+  "pcb_lot": "required",
+  "fixture_id": "required",
+  "station_id": "required",
+  "limit_set_revision": "required",
+  "limit_set_sha256": "required-lowercase-sha256",
+  "fixture_calibration": {
+    "fixture_id": "required",
+    "calibration_due_utc": null,
+    "certificate_sha256": "required-lowercase-sha256"
+  },
+  "firmware": {
+    "radio_sha256": "required-lowercase-sha256",
+    "audio_sha256": "required-lowercase-sha256"
+  },
+  "provisioning_anomaly": false,
+  "device_state": "BLANK",
+  "identity_fingerprint": "0000000000000000",
+  "disposition": "QUARANTINE",
+  "steps": [
+    {"test_id": "MFG-01", "name": "lot scan and immutable identifier", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": false, "measurements": []},
+    {"test_id": "MFG-02", "name": "unpowered inspection and resistance", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "instruments": [], "measurements": []},
+    {"test_id": "MFG-03", "name": "limited-power inrush and rails", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "instruments": [], "measurements": []},
+    {"test_id": "MFG-04", "name": "factory image programming and verification", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": false, "measurements": []},
+    {"test_id": "MFG-05", "name": "identity and security capability", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": false, "measurements": []},
+    {"test_id": "MFG-06", "name": "domain current measurements", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "instruments": [], "measurements": []},
+    {"test_id": "MFG-07", "name": "processor link and injected faults", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "measurements": []},
+    {"test_id": "MFG-08", "name": "acoustic path and safe output", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "instruments": [], "measurements": []},
+    {"test_id": "MFG-09", "name": "shielded RF performance", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "instruments": [], "measurements": []},
+    {"test_id": "MFG-10", "name": "controls indicators haptic and sensors", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "measurements": []},
+    {"test_id": "MFG-11", "name": "fault injection and bounded recovery", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": true, "measurements": []},
+    {"test_id": "MFG-12", "name": "production identity images debug policy and authenticated boot", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": false, "measurements": []},
+    {"test_id": "MFG-13", "name": "diagnostic inspection factory-data clearing and label", "started_utc": null, "completed_utc": null, "outcome": null, "limits_required": false, "measurements": []}
+  ]
+}
