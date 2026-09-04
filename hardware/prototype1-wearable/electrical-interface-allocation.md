@@ -4,13 +4,6 @@
 
 ## Processor Boundary
 
-The radio-side physical mapping is controlled by
-`fgm230sb-pin-allocation.json` (OR-HW-006). It accounts for all 48 SiP pins,
-reserves PA1/PA2/PA3 for SWD/SWO, preserves the proven PB0-PB3 and PA7-PA8
-processor link, enforces the two manufacturer no-connect pins, and records the
-reset state of every used or spare GPIO. Peripheral route assignments remain
-provisional until confirmed in the selected SDK configurator.
-
 | Signal | Direction at FG23 | Requirement |
 |---|---|---|
 | SPI clock | Output | 8 MHz minimum; series-resistor footprint |
@@ -45,3 +38,4 @@ shield/drain, and connector-detect functions. Allocate direct GPIO for
 power/latch, volume up, volume down, and crew/join, plus at least one multicolor
 indicator and one vibration-driver control. The connector family remains a
 mechanical decision.
+

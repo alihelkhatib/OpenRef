@@ -3,7 +3,7 @@
 Prototype 1 is the first custom electronics architecture after Prototype 0
 network feasibility evidence.
 
-The current baseline integrates an FGM230SB FG23 radio/network SiP, a separate
+The current baseline integrates the FG23 radio/network processor, a separate
 audio processor, headset codec/front end, controls, diagnostics, and a removable
 protected 1-cell battery. Architecture inputs are:
 
@@ -11,23 +11,23 @@ protected 1-cell battery. Architecture inputs are:
 - `docs/power/prototype1-power-tree.md`;
 - `docs/adr/ADR-0006-prototype-audio-processor-platform.md`;
 - `hardware/prototype1-wearable/pre-schematic-architecture.md`;
-- `hardware/prototype1-wearable/electrical-interface-contract.json`;
-- `hardware/prototype1-wearable/fgm230sb-pin-allocation.json`;
-- `hardware/prototype1-wearable/schematic-connectivity.json`;
-- `hardware/prototype1-wearable/wearable-mechanical-contract.json`;
-- `docs/mechanical/wearable-integration-baseline.md`;
-- `hardware/prototype1-wearable/cad/fgm230sb-footprint-requirements.md`;
-- `hardware/prototype1-wearable/cad/openref-fgm230sb.kicad_sym`;
-- `hardware/prototype1-wearable/cad/OpenRef-FGM230SB.pretty/FGM230SB27HGN3.kicad_mod`;
-- `tools/generate_fgm230_kicad_library.py`;
-- `tools/validate_fgm230_kicad_library.py`;
-- `tools/validate_fgm230_sdk_routes.py`;
-- `tools/validate_prototype1_connectivity.py`;
-- `tools/validate_wearable_mechanical_contract.py`;
 - `firmware/prototype0/fg23/20260814-openref-80-byte-network-result.md`.
 
 Do not begin custom wearable schematic capture until the readiness checklist is
 satisfied or explicitly waived.
+
+The nine currently open inputs have a machine-checkable intake template at
+`readiness-inputs-template.json`. Create a dated copy, replace an item's
+`open` status only after recording its concrete value or decision, reviewer,
+timezone-qualified timestamp, and SHA-256-bound evidence, then run:
+
+```text
+python tools/prototype1_readiness_inputs.py --check --json path/to/readiness-inputs.json
+```
+
+The checker exits nonzero while any input remains open. Passing validation is
+evidence intake, not permission to check a readiness item whose recorded result
+fails its engineering acceptance criterion.
 
 ## Expected Scope
 
@@ -42,7 +42,7 @@ satisfied or explicitly waived.
 
 ## Deferred Until Required Evidence
 
-- production radio cost optimization beyond the Prototype 1 SiP baseline;
+- final radio silicon/module;
 - antenna architecture;
 - audio codec part number and analog component values;
 - regulator, protection, and supervisor part numbers;
@@ -54,7 +54,9 @@ separate audio processor, processor-link contract, power-domain structure, and
 debug/test philosophy are already architectural baselines. They should not be
 reported as wholly undecided merely because component values remain gated.
 
-The native FGM230SB library is reproducibly tied to the controlled 48-pin CSV
-and the manufacturer's revision 1.2 Figure 8.4 dimensions. Run
-`python tools/validate_fgm230_kicad_library.py` after any CAD-library change.
-This independent check does not replace native KiCad parsing or schematic ERC.
+The Prototype 1 wireless partition is likewise closed at the architecture
+level: a separate FG23 radio/network processor on the sub-GHz path. This does
+not promote the development-board device or commit the production design to a
+part package, module, RF match, or antenna. Those choices remain gated by
+secured-packet airtime, current profiles, supply/lifecycle review, and
+enclosure/body-loss evidence.

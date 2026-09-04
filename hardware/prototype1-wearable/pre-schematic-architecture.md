@@ -4,22 +4,6 @@
 **Revision:** 0.1
 **Status:** Controlled pre-schematic baseline; component selection gated
 
-The machine-checkable companion contract is
-`electrical-interface-contract.json` (OR-HW-005). Run
-`python tools/validate_prototype1_interface_contract.py
-hardware/prototype1-wearable/electrical-interface-contract.json` before and
-after translating these boundaries into CAD.
-
-The sheet-level functional connectivity graph is
-`schematic-connectivity.json` (OR-HW-008). It fixes the required power chain,
-isolation path, protected audio path, RF boundary, and measurement access while
-keeping unselected components explicitly provisional. Cross-check it with:
-
-`python tools/validate_prototype1_connectivity.py
-hardware/prototype1-wearable/schematic-connectivity.json
-hardware/prototype1-wearable/electrical-interface-contract.json
-hardware/prototype1-wearable/fgm230sb-pin-allocation.json`
-
 ## Purpose
 
 Define the custom wearable electronics partition, required nets, protection
@@ -33,12 +17,12 @@ audio, or mechanical gates in the readiness checklist.
 |---|---|---|
 | 01 | Protected 1S pack entry, reverse blocking, input limiting, ship/load switch | insertion transient, reverse case, short protection, leakage |
 | 02 | Always-on monitor and power sequencing | UV/temperature thresholds, rail order, hard shutdown |
-| 03 | FGM230SB FG23 radio/network SiP and debug | secured 114-byte airtime, TX/RX current, final OPN review |
+| 03 | FG23 radio/network processor and debug | secured 114-byte airtime, TX/RX current, RF path decision |
 | 04 | RT-class audio processor and debug | LC3/mixer timing, memory, current, peer recovery |
 | 05 | Codec, microphone bias, and earpiece output | headset impedance, bias, noise, maximum safe level |
 | 06 | Controls, status LED, haptic driver, connector detection | GPIO allocation, wet/glove control mockup |
 | 07 | Interprocessor SPI, resets, timing markers, and test points | 8 MHz link and fault-injection validation |
-| 08 | 50-ohm RFIO, test boundary, provisional antenna match, and external antenna | enclosure orientation, keepout, body-loss test |
+| 08 | RF matching/antenna or certified-module boundary | enclosure orientation, keepout, body-loss test |
 
 ## Named Power Domains
 
@@ -63,9 +47,6 @@ unpowered side.
 The fixed processor link is `AUD_SCLK`, `AUD_COPI`, `AUD_CIPO`, `AUD_CSN`,
 `AUD_REQ_N`, and `AUD_RESET_N`. Keep source-series footprints on clock and COPI.
 Route continuous ground beside the link and avoid crossing codec analog inputs.
-`AUD_RESET_N` is driven by the radio processor but requires a physical pull-down
-and cross-domain isolation so it remains asserted whenever either processor
-domain is unpowered or the FG23 pin is high impedance.
 
 Add `RADIO_RESET_REQ_N` only if the audio processor can drive it safely while
 the radio domain is off. The always-on controller owns `RADIO_EN`, `AUDIO_EN`,

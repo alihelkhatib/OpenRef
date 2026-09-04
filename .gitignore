@@ -1,5 +1,6 @@
 .DS_Store
 *.lnk
+*.kicad_prl
 
 # Python
 __pycache__/

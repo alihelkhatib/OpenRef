@@ -1,0 +1,14 @@
+{
+  "schema": "openref-prototype1-readiness-inputs-v1",
+  "inputs": [
+    {"id": "scheduled_tx_timing", "label": "E0-03 scheduled TX timing measured", "status": "open"},
+    {"id": "secured_packet_airtime", "label": "Measured secured-packet airtime supports the six-node schedule", "status": "open"},
+    {"id": "radio_mode_current", "label": "TX, RX, idle, and continuous-packet current measured", "status": "open"},
+    {"id": "role_current_estimate", "label": "Coordinator and member current estimate", "status": "open"},
+    {"id": "wearable_volume", "label": "Approximate wearable volume target", "status": "open"},
+    {"id": "mounting_orientation", "label": "Mounting orientation", "status": "open"},
+    {"id": "battery_placement", "label": "Battery placement concept", "status": "open"},
+    {"id": "headset_connector_placement", "label": "Headset connector placement concept", "status": "open"},
+    {"id": "control_placement", "label": "Control placement concept", "status": "open"}
+  ]
+}
