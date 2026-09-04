@@ -34,6 +34,7 @@ firmware/**/.metadata/
 firmware/**/*.log
 firmware/**/*.csv
 firmware/**/*.json
+!firmware/audio_processor/benchmark/vectors/*.json
 firmware/**/*.bin
 firmware/**/*.hex
 firmware/**/*.elf
