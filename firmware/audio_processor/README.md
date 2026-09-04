@@ -23,6 +23,15 @@ flags capture discontinuities and counts any block that exceeds the 8 ms
 processing budget. Board adapters provide only codec and monotonic-clock
 callbacks and move DMA buffers at the boundary.
 
+## Processor Benchmark
+
+`benchmark/openref_audio_benchmark.h/.c` defines the reproducible promotion
+workload: one 16 kHz LC3 encoder, five independent decoders, PLC, five-source
+mixing, and an 8 ms processing deadline. See
+[`benchmark/README.md`](benchmark/README.md) for the fixed run length, callback
+contract, result schema, and result-validation command. Native runs verify the
+portable integration only; performance claims require a paced target run.
+
 ## Target Direction
 
 The first target adapter will be MIMXRT595-EVK. It will connect:
@@ -34,11 +43,14 @@ The first target adapter will be MIMXRT595-EVK. It will connect:
 
 Target promotion requires the exit tests in
 `docs/adr/ADR-0006-prototype-audio-processor-platform.md`.
+New board ports should follow the directory and evidence conventions in
+[`targets/README.md`](targets/README.md).
 
 ## Native Verification
 
 `tools/run_firmware_native_tests.py` compiles and executes the portable network,
-link, capture, playout, mixer, and integrated-pipeline C tests. The local
+link, capture, playout, mixer, integrated-pipeline, runtime, and processor
+benchmark C tests. The local
 2026-08-14 run used the official Zig 0.16.0 Windows archive with SHA-256
 `68659eb5f1e4eb1437a722f1dd889c5a322c9954607f5edcf337bc3684a75a7e`.
 The compiler is kept in ignored artifacts and is not installed system-wide.

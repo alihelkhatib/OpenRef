@@ -72,6 +72,7 @@ typedef struct {
     uint64_t render_sum_us;
     uint64_t total_sum_us;
     bool initialized;
+    bool finished;
 } openref_audio_benchmark_t;
 
 bool openref_audio_benchmark_init(

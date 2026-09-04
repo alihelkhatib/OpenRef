@@ -10,6 +10,13 @@ static void update_maximum(uint32_t value, uint32_t *maximum)
     }
 }
 
+static void increment_saturating(uint32_t *value)
+{
+    if (*value != UINT32_MAX) {
+        (*value)++;
+    }
+}
+
 static uint32_t next_random(openref_audio_benchmark_t *benchmark)
 {
     uint32_t value = benchmark->prng_state;
@@ -49,7 +56,7 @@ static bool benchmark_encode(
         memcpy(benchmark->latest_codec_frame, codec_frame,
                OPENREF_AUDIO_CODEC_FRAME_BYTES);
     } else {
-        benchmark->result.encode_failures++;
+        increment_saturating(&benchmark->result.encode_failures);
     }
     return encoded;
 }
@@ -62,13 +69,15 @@ static bool benchmark_decode(
     int16_t pcm[OPENREF_AUDIO_FRAME_SAMPLES])
 {
     openref_audio_benchmark_t *benchmark = context;
-    if (use_plc) {
-        benchmark->result.plc_calls++;
+    /* Promotion evidence must reflect the measured interval, not warmup. */
+    if (use_plc &&
+        benchmark->total_blocks >= benchmark->config.warmup_blocks) {
+        increment_saturating(&benchmark->result.plc_calls);
     }
     bool decoded = benchmark->hooks.decode(
         benchmark->hooks.codec_context, decoder_index, codec_frame, use_plc, pcm);
     if (!decoded) {
-        benchmark->result.decode_failures++;
+        increment_saturating(&benchmark->result.decode_failures);
     }
     return decoded;
 }
@@ -123,6 +132,7 @@ static void finalize(openref_audio_benchmark_t *benchmark)
         benchmark->result.process_failures == 0u &&
         benchmark->result.deadline_misses == 0u &&
         benchmark->result.maximum_total_us <= OPENREF_AUDIO_PROCESSING_BUDGET_US;
+    benchmark->finished = true;
 }
 
 bool openref_audio_benchmark_init(
@@ -167,11 +177,11 @@ bool openref_audio_benchmark_init(
 
 bool openref_audio_benchmark_step(openref_audio_benchmark_t *benchmark)
 {
-    if (benchmark == NULL || !benchmark->initialized || benchmark->result.complete) {
+    if (benchmark == NULL || !benchmark->initialized || benchmark->finished) {
         return false;
     }
     if (!queue_remote_packets(benchmark)) {
-        benchmark->result.process_failures++;
+        increment_saturating(&benchmark->result.process_failures);
         finalize(benchmark);
         return false;
     }
@@ -184,7 +194,7 @@ bool openref_audio_benchmark_step(openref_audio_benchmark_t *benchmark)
         benchmark_encode, benchmark_decode, benchmark->hooks.clock_us,
         benchmark, benchmark->hooks.clock_context, headphone);
     if (!processed) {
-        benchmark->result.process_failures++;
+        increment_saturating(&benchmark->result.process_failures);
         finalize(benchmark);
         return false;
     }
@@ -201,7 +211,7 @@ bool openref_audio_benchmark_step(openref_audio_benchmark_t *benchmark)
         update_maximum(benchmark->runtime.last_total_us,
                        &benchmark->result.maximum_total_us);
         if (benchmark->runtime.last_total_us > OPENREF_AUDIO_PROCESSING_BUDGET_US) {
-            benchmark->result.deadline_misses++;
+            increment_saturating(&benchmark->result.deadline_misses);
         }
     }
     benchmark->total_blocks++;

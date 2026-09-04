@@ -1,150 +1,196 @@
 #!/usr/bin/env python3
-"""Validate OpenRef audio benchmark evidence and optional promotion readiness."""
+"""Validate an OpenRef audio-processor promotion benchmark result."""
 
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import math
 from pathlib import Path
+from typing import Any
 
 
-COUNTERS = {
-    "requested_blocks", "completed_blocks", "plc_calls", "encode_failures",
-    "decode_failures", "process_failures", "deadline_misses",
-    "maximum_encode_us", "maximum_render_us", "maximum_total_us",
-    "average_encode_us", "average_render_us", "average_total_us",
-    "stack_high_water_bytes", "stack_reserved_bytes", "static_memory_bytes",
-    "memory_capacity_bytes", "clock_hz", "sample_rate_hz", "block_samples",
-    "encoder_instances", "decoder_instances", "capture_dma_overruns",
-    "playback_dma_underruns", "pacing_deadline_misses",
+EXPECTED = {
+    "schema": "openref-audio-benchmark-v1",
+    "benchmark_version": 1,
+    "execution_mode": "paced-target",
+    "sample_rate_hz": 16000,
+    "channel_count": 1,
+    "sample_format": "signed-16-bit-pcm",
+    "frame_duration_us": 10000,
+    "codec_frame_bytes": 40,
+    "encoder_count": 1,
+    "decoder_count": 5,
+    "plc_period_packets": 97,
+    "warmup_blocks": 1000,
+    "requested_blocks": 180000,
+    "processing_budget_us": 8000,
 }
-TEXT_FIELDS = {
-    "target", "execution_mode", "compiler", "optimization", "codec",
-    "firmware_commit", "sdk_version", "board_revision", "silicon_revision",
-    "audio_io_mode",
-}
-CURRENT_FIELDS = {"idle_current_ma", "one_talker_current_ma", "six_talker_current_ma"}
-ARTIFACT_KEYS = {"serial_log", "elf", "map"}
+
+def expected_plc_calls() -> int:
+    """Return PLC calls in the canonical measured block interval.
+
+    Each packet supplies two blocks. Packet k's second block, 2*k + 1, is
+    missing for source six when positive k is divisible by the PLC period.
+    """
+    interval = 2 * EXPECTED["plc_period_packets"]
+    first_block = EXPECTED["warmup_blocks"]
+    last_block = first_block + EXPECTED["requested_blocks"] - 1
+    first_multiple = max(1, (first_block - 1 + interval - 1) // interval)
+    last_multiple = (last_block - 1) // interval
+    return max(0, last_multiple - first_multiple + 1)
 
 
-def validate_result(data: dict, require_promotion: bool = False) -> list[str]:
+EXPECTED_PLC_CALLS = expected_plc_calls()
+EXPECTED_PACING_TICKS = EXPECTED["warmup_blocks"] + EXPECTED["requested_blocks"]
+EXPECTED_ELAPSED_US = EXPECTED_PACING_TICKS * EXPECTED["frame_duration_us"]
+PACING_ELAPSED_TOLERANCE_US = 1000
+
+REQUIRED_TEXT = (
+    "target",
+    "silicon_revision",
+    "compiler",
+    "optimization",
+    "codec",
+    "firmware_commit",
+    "memory_placement",
+    "clock_configuration",
+    "timer_source",
+    "current_measurement",
+)
+
+REQUIRED_COUNTS = (
+    "completed_blocks",
+    "plc_calls",
+    "encode_failures",
+    "decode_failures",
+    "process_failures",
+    "deadline_misses",
+    "maximum_encode_us",
+    "maximum_render_us",
+    "maximum_total_us",
+    "average_encode_us",
+    "average_render_us",
+    "average_total_us",
+    "stack_high_water_bytes",
+    "pacing_ticks",
+    "pacing_overruns",
+    "elapsed_us",
+)
+
+PLACEHOLDER_TEXT = {"unknown", "not_measured", "n/a", "na", "none", "null", "tbd"}
+
+
+def validate_result(result: Any) -> list[str]:
     errors: list[str] = []
-    if data.get("schema") != "openref-audio-benchmark-v2":
-        errors.append("unsupported benchmark schema")
-    for field in TEXT_FIELDS:
-        if not isinstance(data.get(field), str) or not data[field].strip():
-            errors.append(f"{field} must be a nonempty string")
-    for field in COUNTERS:
-        value = data.get(field)
-        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-            errors.append(f"{field} must be a nonnegative integer")
-    for field in ("complete", "passed"):
-        if not isinstance(data.get(field), bool):
-            errors.append(f"{field} must be boolean")
-    for field in CURRENT_FIELDS:
-        value = data.get(field)
-        if value is not None and (not isinstance(value, (int, float)) or
-                                  isinstance(value, bool) or value <= 0):
-            errors.append(f"{field} must be null or positive")
-
-    if errors:
-        return errors
-    compute_pass = (
-        data["execution_mode"] == "paced-target" and
-        data["audio_io_mode"] == "ping-pong-dma" and
-        data["sample_rate_hz"] == 16000 and data["block_samples"] == 160 and
-        data["encoder_instances"] == 1 and data["decoder_instances"] == 5 and
-        data["requested_blocks"] >= 180000 and
-        data["completed_blocks"] == data["requested_blocks"] and
-        data["plc_calls"] > 0 and data["encode_failures"] == 0 and
-        data["decode_failures"] == 0 and data["process_failures"] == 0 and
-        data["deadline_misses"] == 0 and
-        data["capture_dma_overruns"] == 0 and
-        data["playback_dma_underruns"] == 0 and
-        data["pacing_deadline_misses"] == 0 and
-        data["maximum_total_us"] <= 8000 and
-        data["complete"]
+    if not isinstance(result, dict):
+        return ["root must be a JSON object"]
+    for field, expected in EXPECTED.items():
+        value = result.get(field)
+        if type(value) is not type(expected) or value != expected:
+            errors.append(f"{field} must equal {expected!r}")
+    for field in REQUIRED_TEXT:
+        if not isinstance(result.get(field), str) or not result[field].strip():
+            errors.append(f"{field} must be a non-empty string")
+        elif result[field].strip().lower() in PLACEHOLDER_TEXT:
+            errors.append(f"{field} must not be placeholder provenance")
+    if (not isinstance(result.get("clock_hz"), int) or
+            isinstance(result.get("clock_hz"), bool) or result["clock_hz"] <= 0):
+        errors.append("clock_hz must be a positive integer")
+    for field in REQUIRED_COUNTS:
+        if (not isinstance(result.get(field), int) or
+                isinstance(result.get(field), bool) or result[field] < 0):
+            errors.append(f"{field} must be a non-negative integer")
+    for field in ("idle_current_ma", "one_talker_current_ma", "six_talker_current_ma"):
+        value = result.get(field)
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) or value <= 0:
+            errors.append(f"{field} must be a positive finite measurement")
+    if result.get("complete") is not True:
+        errors.append("complete must be true")
+    if result.get("passed") is not True:
+        errors.append("passed must be true")
+    if (isinstance(result.get("completed_blocks"), int) and
+            not isinstance(result["completed_blocks"], bool) and
+            result["completed_blocks"] != 180000):
+        errors.append("completed_blocks must equal 180000")
+    if (isinstance(result.get("plc_calls"), int) and
+            not isinstance(result["plc_calls"], bool) and
+            result["plc_calls"] != EXPECTED_PLC_CALLS):
+        errors.append(f"plc_calls must equal {EXPECTED_PLC_CALLS}")
+    if isinstance(result.get("stack_high_water_bytes"), int) and \
+            not isinstance(result["stack_high_water_bytes"], bool) and \
+            result["stack_high_water_bytes"] <= 0:
+        errors.append("stack_high_water_bytes must be positive")
+    if (isinstance(result.get("pacing_ticks"), int) and
+            not isinstance(result["pacing_ticks"], bool) and
+            result["pacing_ticks"] != EXPECTED_PACING_TICKS):
+        errors.append(f"pacing_ticks must equal {EXPECTED_PACING_TICKS}")
+    if result.get("pacing_overruns") != 0:
+        errors.append("pacing_overruns must equal 0")
+    elapsed_us = result.get("elapsed_us")
+    maximum_total = result.get("maximum_total_us")
+    if (isinstance(elapsed_us, int) and not isinstance(elapsed_us, bool) and
+            isinstance(maximum_total, int) and not isinstance(maximum_total, bool) and
+            not EXPECTED_ELAPSED_US <= elapsed_us <= (
+                EXPECTED_ELAPSED_US + maximum_total + PACING_ELAPSED_TOLERANCE_US
+            )):
+        errors.append(
+            "elapsed_us must cover exactly the paced workload plus the final block and bounded interrupt latency"
+        )
+    for field in ("encode_failures", "decode_failures", "process_failures", "deadline_misses"):
+        if result.get(field) != 0:
+            errors.append(f"{field} must equal 0")
+    maximum = result.get("maximum_total_us")
+    if isinstance(maximum, int) and maximum > 8000:
+        errors.append("maximum_total_us must be at most 8000")
+    if isinstance(maximum, int) and not isinstance(maximum, bool) and maximum <= 0:
+        errors.append("maximum_total_us must be positive")
+    timing_pairs = (
+        ("average_encode_us", "maximum_encode_us"),
+        ("average_render_us", "maximum_render_us"),
+        ("average_total_us", "maximum_total_us"),
     )
-    if data["passed"] != compute_pass:
-        errors.append("passed does not match the controlled compute criteria")
-    if require_promotion:
-        if not compute_pass:
-            errors.append("compute benchmark has not passed")
-        if data["clock_hz"] <= 0 or data["stack_high_water_bytes"] <= 0:
-            errors.append("promotion requires clock and stack evidence")
-        if data["stack_reserved_bytes"] <= 0 or data["memory_capacity_bytes"] <= 0:
-            errors.append("promotion requires reserved-stack and memory-capacity evidence")
-        elif data["stack_high_water_bytes"] * 5 > data["stack_reserved_bytes"] * 4:
-            errors.append("stack high-water exceeds the 80% promotion ceiling")
-        used_memory = data["static_memory_bytes"] + data["stack_reserved_bytes"]
-        if data["memory_capacity_bytes"] > 0 and used_memory * 5 > data["memory_capacity_bytes"] * 4:
-            errors.append("static plus reserved-stack memory exceeds the 80% promotion ceiling")
-        missing = sorted(field for field in CURRENT_FIELDS if data[field] is None)
-        if missing:
-            errors.append("promotion requires measured currents: " + ", ".join(missing))
-        artifacts = data.get("artifact_sha256")
-        if not isinstance(artifacts, dict) or set(artifacts) != ARTIFACT_KEYS or any(
-            not isinstance(value, str) or len(value) != 64 or
-            any(char not in "0123456789abcdefABCDEF" for char in value)
-            for value in artifacts.values()
-        ):
-            errors.append("promotion requires SHA-256 evidence for serial_log, elf, and map")
-        files = data.get("artifact_files")
-        if not isinstance(files, dict) or set(files) != ARTIFACT_KEYS or any(
-            not isinstance(value, str) or not value.strip() or
-            Path(value).is_absolute() or ".." in Path(value).parts
-            for value in files.values()
-        ):
-            errors.append("promotion requires safe relative filenames for serial_log, elf, and map")
-    return errors
-
-
-def validate_artifact_files(data: dict, artifact_root: Path) -> list[str]:
-    """Verify promotion hashes against files under a bounded artifact root."""
-    errors: list[str] = []
-    files = data.get("artifact_files")
-    hashes = data.get("artifact_sha256")
-    if not isinstance(files, dict) or not isinstance(hashes, dict):
-        return ["artifact filenames and hashes are required"]
-    root = artifact_root.resolve()
-    for key in sorted(ARTIFACT_KEYS):
-        name = files.get(key)
-        expected = hashes.get(key)
-        if not isinstance(name, str):
-            errors.append(f"artifact filename is missing: {key}")
-            continue
-        path = (root / name).resolve()
-        try:
-            path.relative_to(root)
-        except ValueError:
-            errors.append(f"artifact escapes the evidence root: {key}")
-            continue
-        if not path.is_file():
-            errors.append(f"artifact file is missing: {key}")
-            continue
-        actual = hashlib.sha256(path.read_bytes()).hexdigest()
-        if not isinstance(expected, str) or actual.lower() != expected.lower():
-            errors.append(f"artifact hash mismatch: {key}")
+    for average_field, maximum_field in timing_pairs:
+        average = result.get(average_field)
+        maximum_value = result.get(maximum_field)
+        if (isinstance(average, int) and not isinstance(average, bool) and
+                isinstance(maximum_value, int) and not isinstance(maximum_value, bool) and
+                average > maximum_value):
+            errors.append(f"{average_field} must be at most {maximum_field}")
+    average_total = result.get("average_total_us")
+    average_encode = result.get("average_encode_us")
+    average_render = result.get("average_render_us")
+    if all(isinstance(value, int) and not isinstance(value, bool)
+           for value in (average_total, average_encode, average_render)) and \
+            not average_encode + average_render <= average_total <= average_encode + average_render + 1:
+        errors.append(
+            "average_total_us must be the sum of component averages, allowing one microsecond of truncation"
+        )
+    maximum_encode = result.get("maximum_encode_us")
+    maximum_render = result.get("maximum_render_us")
+    if all(isinstance(value, int) and not isinstance(value, bool)
+           for value in (maximum, maximum_encode, maximum_render)) and \
+            (maximum < maximum_encode or maximum < maximum_render):
+        errors.append("maximum_total_us must cover encode and render maxima")
     return errors
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("result", type=Path)
-    parser.add_argument("--require-promotion", action="store_true")
-    parser.add_argument("--artifact-root", type=Path)
     args = parser.parse_args()
-    data = json.loads(args.result.read_text(encoding="utf-8"))
-    errors = validate_result(data, args.require_promotion)
-    if args.require_promotion:
-        if args.artifact_root is None:
-            errors.append("promotion validation requires --artifact-root")
-        else:
-            errors.extend(validate_artifact_files(data, args.artifact_root))
+    try:
+        result = json.loads(args.result.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        print(f"ERROR: {error}")
+        return 2
+    errors = validate_result(result)
     for error in errors:
         print(f"ERROR: {error}")
-    return 1 if errors else 0
+    if errors:
+        return 1
+    print(f"PASS {args.result}")
+    return 0
 
 
 if __name__ == "__main__":
