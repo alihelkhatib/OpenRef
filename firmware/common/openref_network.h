@@ -26,12 +26,8 @@ typedef enum {
     OPENREF_NETWORK_ACTION_NONE = 0,
     OPENREF_NETWORK_ACTION_SEND_HEARTBEAT = 1u << 0,
     OPENREF_NETWORK_ACTION_COORDINATOR_TIMEOUT = 1u << 1,
-    OPENREF_NETWORK_ACTION_COORDINATOR_CHANGED = 1u << 2,
-    OPENREF_NETWORK_ACTION_EPOCH_FAILURE = 1u << 3
+    OPENREF_NETWORK_ACTION_COORDINATOR_CHANGED = 1u << 2
 } openref_network_action_t;
-
-typedef bool (*openref_network_advance_epoch_fn)(
-    void *context, uint32_t current_epoch, uint32_t *persisted_next_epoch);
 
 typedef enum {
     OPENREF_NETWORK_RX_FIRST = 0,
@@ -51,10 +47,6 @@ typedef struct {
     uint32_t heartbeat_interval_us;
     uint32_t heartbeat_timeout_us;
     uint32_t election_delay_us;
-    uint32_t initial_coordinator_epoch;
-    openref_network_advance_epoch_fn advance_epoch;
-    void *epoch_context;
-    bool require_persisted_epoch;
 } openref_network_config_t;
 
 typedef struct {
@@ -79,7 +71,6 @@ typedef struct {
     uint64_t election_deadline_us;
     uint32_t coordinator_changes;
     uint32_t heartbeat_timeouts;
-    uint32_t epoch_failures;
     openref_network_rx_state_t rx[OPENREF_NETWORK_MAX_NODES];
 } openref_network_state_t;
 

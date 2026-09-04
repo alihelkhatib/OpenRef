@@ -1,7 +1,15 @@
 #include "openref_watchdog_gate.h"
 
+#include <limits.h>
 #include <stddef.h>
 #include <string.h>
+
+static void increment_saturating(uint32_t *counter)
+{
+    if (*counter != UINT32_MAX) {
+        (*counter)++;
+    }
+}
 
 bool openref_watchdog_gate_init(
     openref_watchdog_gate_t *gate,
@@ -32,9 +40,9 @@ bool openref_watchdog_gate_report(
     if (gate == NULL || task_index >= OPENREF_WATCHDOG_MAX_TASKS ||
         (gate->config.required_mask & (uint8_t)(1u << task_index)) == 0u ||
         ((gate->seen_mask & (uint8_t)(1u << task_index)) != 0u &&
-         now_ms < gate->last_progress_ms[task_index])) {
+        now_ms < gate->last_progress_ms[task_index])) {
         if (gate != NULL) {
-            gate->invalid_report_count++;
+            increment_saturating(&gate->invalid_report_count);
         }
         return false;
     }
@@ -74,7 +82,7 @@ bool openref_watchdog_gate_should_feed(
     }
     if (fault_mask != 0u) {
         if (gate->healthy || gate->last_fault_mask != fault_mask) {
-            gate->fault_count++;
+            increment_saturating(&gate->fault_count);
         }
         gate->healthy = false;
         gate->last_fault_mask = fault_mask;
@@ -87,6 +95,6 @@ bool openref_watchdog_gate_should_feed(
     gate->progress_mask &= (uint8_t)~gate->config.required_mask;
     gate->last_fault_mask = 0u;
     gate->healthy = true;
-    gate->feed_count++;
+    increment_saturating(&gate->feed_count);
     return true;
 }

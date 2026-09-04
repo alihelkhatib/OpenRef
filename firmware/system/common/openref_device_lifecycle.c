@@ -12,36 +12,6 @@ static bool all_zero(const uint8_t *data, uint8_t length)
     return aggregate == 0u;
 }
 
-bool openref_device_record_valid(const openref_device_record_t *record)
-{
-    bool id_zero;
-    bool fingerprint_zero;
-    if (record == NULL || record->state > OPENREF_DEVICE_RETIRED) {
-        return false;
-    }
-    id_zero = all_zero(record->device_id, OPENREF_DEVICE_ID_BYTES);
-    fingerprint_zero = all_zero(
-        record->identity_fingerprint, OPENREF_IDENTITY_FINGERPRINT_BYTES);
-    if (record->state == OPENREF_DEVICE_BLANK) {
-        return record->generation == 0u && id_zero && fingerprint_zero &&
-            record->failure_code == 0u;
-    }
-    if (record->generation == 0u) {
-        return false;
-    }
-    if (record->state == OPENREF_DEVICE_FACTORY_TEST) {
-        return id_zero && fingerprint_zero && record->failure_code == 0u;
-    }
-    if (record->state == OPENREF_DEVICE_IDENTITY_INSTALLED ||
-        record->state == OPENREF_DEVICE_PRODUCTION_LOCKED) {
-        return !id_zero && !fingerprint_zero && record->failure_code == 0u;
-    }
-    if (record->state == OPENREF_DEVICE_QUARANTINED) {
-        return record->failure_code != 0u;
-    }
-    return !id_zero && fingerprint_zero;
-}
-
 static bool persist(openref_device_lifecycle_t *lifecycle)
 {
     lifecycle->record.generation++;
@@ -75,8 +45,19 @@ bool openref_device_lifecycle_init(openref_device_lifecycle_t *lifecycle,
     memset(lifecycle, 0, sizeof(*lifecycle));
     lifecycle->backend = backend;
     if (persisted_record != NULL) {
+        if (persisted_record->state > OPENREF_DEVICE_RETIRED) {
+            return false;
+        }
         lifecycle->record = *persisted_record;
-        if (!openref_device_record_valid(persisted_record)) {
+        bool identity_required = persisted_record->state ==
+                OPENREF_DEVICE_IDENTITY_INSTALLED ||
+            persisted_record->state == OPENREF_DEVICE_PRODUCTION_LOCKED;
+        if ((persisted_record->state != OPENREF_DEVICE_BLANK &&
+             persisted_record->generation == 0u) ||
+            (identity_required &&
+             (all_zero(persisted_record->device_id, OPENREF_DEVICE_ID_BYTES) ||
+              all_zero(persisted_record->identity_fingerprint,
+                       OPENREF_IDENTITY_FINGERPRINT_BYTES)))) {
             lifecycle->record.state = OPENREF_DEVICE_QUARANTINED;
         }
     }

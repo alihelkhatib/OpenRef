@@ -37,14 +37,5 @@ int main(void)
         &manager, OPENREF_VOLUME_MUTE_USER, false));
     assert(openref_volume_manager_gain_q15(&manager) == 4096u);
     assert(manager.mute_transitions == 3u);
-    assert(openref_volume_manager_set_mute(
-        &manager, OPENREF_VOLUME_MUTE_STARTUP, true));
-    assert(openref_volume_manager_restore_step(&manager, 3u));
-    assert(manager.requested_step == 3u);
-    assert(openref_volume_manager_gain_q15(&manager) == 0u);
-    assert(openref_volume_manager_set_ceiling(&manager, 2u));
-    assert(openref_volume_manager_restore_step(&manager, 4u));
-    assert(manager.requested_step == 2u);
-    assert(!openref_volume_manager_restore_step(&manager, 5u));
     return 0;
 }

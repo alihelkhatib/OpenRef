@@ -157,10 +157,29 @@ static void test_truncation_overflow_and_corruption(void)
     assert(!openref_update_verifier_finish(&verifier));
 }
 
+static void test_reuse_clears_stale_approval(void)
+{
+    crypto_state_t state = {.signature_ok = true};
+    openref_update_verifier_t verifier = make_verifier(&state);
+    uint8_t image[1] = {9u};
+    uint8_t wire[OPENREF_UPDATE_MANIFEST_BYTES];
+    make_manifest(wire, OPENREF_UPDATE_TARGET_RADIO, 7u, 1u, 9u);
+    assert(openref_update_verifier_begin(&verifier, wire));
+    assert(openref_update_verifier_write(&verifier, image, sizeof(image)));
+    assert(openref_update_verifier_finish(&verifier));
+    assert(verifier.verified);
+    wire[0] = 0u;
+    assert(!openref_update_verifier_begin(&verifier, wire));
+    assert(!verifier.verified);
+    assert(verifier.received_bytes == 0u);
+    assert(verifier.manifest.image_size == 0u);
+}
+
 int main(void)
 {
     test_valid_streamed_image();
     test_manifest_security_rejections();
     test_truncation_overflow_and_corruption();
+    test_reuse_clears_stale_approval();
     return 0;
 }

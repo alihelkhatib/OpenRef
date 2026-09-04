@@ -20,7 +20,10 @@ bool openref_boot_policy_state_valid(const openref_boot_state_t *state)
     return state != NULL && state->record_version == 1u &&
         slot_id_valid(state->confirmed_slot) &&
         (state->pending_slot == OPENREF_BOOT_NO_SLOT ||
-         slot_id_valid(state->pending_slot));
+         (slot_id_valid(state->pending_slot) &&
+          state->pending_slot != state->confirmed_slot)) &&
+        (state->pending_slot != OPENREF_BOOT_NO_SLOT ||
+         state->pending_attempts == 0u);
 }
 
 bool openref_boot_policy_stage(

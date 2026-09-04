@@ -28,7 +28,8 @@ bool openref_crew_session_init(
     uint8_t local_node_id,
     openref_crew_key_backend_t backend)
 {
-    if (session == NULL || local_node_id > OPENREF_CREW_MAX_MEMBERS ||
+    if (session == NULL || local_node_id == 0u ||
+        local_node_id > OPENREF_CREW_MAX_MEMBERS ||
         backend.install == NULL || backend.erase == NULL) {
         return false;
     }
@@ -53,6 +54,7 @@ bool openref_crew_session_activate(
         ? (uint8_t)(1u << (admission->local_node_id - 1u)) : 0u;
     bool valid = admission->authenticated && admission->session_id != 0u &&
         admission->session_id != session->last_session_id &&
+        admission->local_node_id == session->local_node_id &&
         (admission->member_mask & (uint8_t)~valid_member_bits) == 0u &&
         local_bit != 0u && (admission->member_mask & local_bit) != 0u &&
         admission->member_count >= 2u &&
@@ -71,7 +73,6 @@ bool openref_crew_session_activate(
         return false;
     }
     session->active_session_id = admission->session_id;
-    session->local_node_id = admission->local_node_id;
     session->last_session_id = admission->session_id;
     session->member_mask = admission->member_mask;
     session->active = true;

@@ -15,6 +15,12 @@ int main(void)
         .confirmed_slot = OPENREF_BOOT_SLOT_A,
         .pending_slot = OPENREF_BOOT_NO_SLOT,
     };
+    openref_boot_state_t invalid = state;
+    invalid.pending_attempts = 1u;
+    assert(!openref_boot_policy_state_valid(&invalid));
+    invalid = state;
+    invalid.pending_slot = invalid.confirmed_slot;
+    assert(!openref_boot_policy_state_valid(&invalid));
     assert(openref_boot_policy_stage(&state, OPENREF_BOOT_SLOT_B, slots));
     for (uint8_t attempt = 1u; attempt <= 3u; attempt++) {
         openref_boot_decision_t decision =

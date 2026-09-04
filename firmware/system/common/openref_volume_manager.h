@@ -40,10 +40,6 @@ bool openref_volume_manager_set_ceiling(
     openref_volume_manager_t *manager,
     uint8_t ceiling_step);
 
-bool openref_volume_manager_restore_step(
-    openref_volume_manager_t *manager,
-    uint8_t requested_step);
-
 bool openref_volume_manager_set_mute(
     openref_volume_manager_t *manager,
     uint32_t reason,

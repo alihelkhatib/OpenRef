@@ -133,8 +133,8 @@ bool openref_crew_admission_accept(openref_crew_admission_protocol_t *protocol,
             protocol->config.invitation_window_ms &&
         wire[0] == 0x4fu && wire[1] == 0x52u && wire[2] == 0x4au &&
         wire[3] == 0x4eu && wire[4] == 1u && local_bit != 0u &&
-        (member_mask & 0xc0u) == 0u && (member_mask & local_bit) != 0u &&
-        member_count >= 2u &&
+        local_node_id == protocol->crew_session->local_node_id &&
+        (member_mask & local_bit) != 0u && member_count >= 2u &&
         member_count <= OPENREF_CREW_MAX_MEMBERS &&
         population(member_mask) == member_count && session_id != 0u &&
         counter > protocol->last_admission_counter &&

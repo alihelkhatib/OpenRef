@@ -102,6 +102,12 @@ static void test_backend_failures_fail_closed(void)
 
 int main(void)
 {
+    backend_state_t invalid_state = {.install_ok = true, .erase_ok = true};
+    openref_crew_session_t invalid_session;
+    openref_crew_key_backend_t invalid_backend = {
+        install_key, erase_key, &invalid_state};
+    assert(!openref_crew_session_init(&invalid_session, 0u,
+        invalid_backend));
     test_activation_leave_and_no_key_retention();
     test_rejects_unauthenticated_or_inconsistent_admission();
     test_backend_failures_fail_closed();

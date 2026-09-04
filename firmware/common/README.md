@@ -40,6 +40,11 @@ admission; this portable layer intentionally contains no AES implementation.
 
 `openref_boot_counter.h/.c` advances a monotonic boot counter through storage
 callbacks and reads it back before allowing nonce use.
+`openref_crew_admission.h/.c` admits a provisioned unit only during a bounded,
+physically confirmed join window. Invitations bind a fresh challenge, a
+monotonic persisted counter, the provisioned local node identity, exact crew
+membership, a coordinator fingerprint, and an authenticated wrapped session
+key. Invalid input and backend failures fail closed with bounded lockout.
 `openref_secure_network_packet.h/.c` converts the proven 98-byte plaintext
 representation to and from the 114-byte protected wire representation while
 leaving the network state machine independent of the crypto backend.

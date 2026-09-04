@@ -43,7 +43,6 @@ openref_network_config_t openref_network_default_config(uint8_t node_id)
         .heartbeat_interval_us = OPENREF_NETWORK_HEARTBEAT_INTERVAL_US,
         .heartbeat_timeout_us = OPENREF_NETWORK_HEARTBEAT_TIMEOUT_US,
         .election_delay_us = OPENREF_NETWORK_ELECTION_DELAY_US,
-        .initial_coordinator_epoch = 0u,
     };
     return config;
 }
@@ -60,7 +59,6 @@ bool openref_network_init(
         config->superframe_us == 0u || config->slot_spacing_us == 0u ||
         config->heartbeat_interval_us == 0u || config->heartbeat_timeout_us == 0u ||
         config->election_delay_us == 0u ||
-        (config->require_persisted_epoch && config->advance_epoch == NULL) ||
         (uint64_t)OPENREF_NETWORK_MAX_NODES * config->slot_spacing_us > config->superframe_us) {
         return false;
     }
@@ -69,7 +67,6 @@ bool openref_network_init(
     state->config = *config;
     state->eligible_mask = config->member_mask;
     state->coordinator_id = config->initial_coordinator_id;
-    state->coordinator_epoch = config->initial_coordinator_epoch;
     state->role = config->node_id == config->initial_coordinator_id
         ? OPENREF_NETWORK_COORDINATOR
         : OPENREF_NETWORK_FOLLOWER;
@@ -109,25 +106,8 @@ uint32_t openref_network_tick(openref_network_state_t *state, uint64_t now_us)
     if (state->role == OPENREF_NETWORK_ELECTION && now_us >= state->election_deadline_us) {
         uint8_t elected = elect_lowest_member(state->eligible_mask);
         if (elected != OPENREF_NETWORK_BROADCAST_ID) {
-            uint32_t next_epoch = 0u;
-            bool epoch_advanced = false;
-            if (state->config.advance_epoch != NULL) {
-                epoch_advanced = state->config.advance_epoch(
-                    state->config.epoch_context, state->coordinator_epoch,
-                    &next_epoch) && next_epoch > state->coordinator_epoch;
-            } else if (!state->config.require_persisted_epoch &&
-                       state->coordinator_epoch != UINT32_MAX) {
-                next_epoch = state->coordinator_epoch + 1u;
-                epoch_advanced = true;
-            }
-            if (!epoch_advanced) {
-                state->epoch_failures++;
-                state->election_deadline_us = now_us +
-                    state->config.election_delay_us;
-                return actions | OPENREF_NETWORK_ACTION_EPOCH_FAILURE;
-            }
             state->coordinator_id = elected;
-            state->coordinator_epoch = next_epoch;
+            state->coordinator_epoch++;
             state->role = elected == state->config.node_id
                 ? OPENREF_NETWORK_COORDINATOR
                 : OPENREF_NETWORK_FOLLOWER;

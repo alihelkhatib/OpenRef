@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdint.h>
 
 #include "openref_watchdog_gate.h"
 
@@ -57,10 +58,31 @@ static void test_rejects_invalid_reports_and_configuration(void)
     assert(!openref_watchdog_gate_init(&gate, &invalid, 0u));
 }
 
+static void test_diagnostic_counters_saturate(void)
+{
+    openref_watchdog_gate_t gate = make_gate();
+    gate.invalid_report_count = UINT32_MAX;
+    assert(!openref_watchdog_gate_report(&gate, 7u, 1001u));
+    assert(gate.invalid_report_count == UINT32_MAX);
+
+    gate.fault_count = UINT32_MAX;
+    assert(!openref_watchdog_gate_should_feed(&gate, 1101u));
+    assert(gate.fault_count == UINT32_MAX);
+
+    gate = make_gate();
+    gate.feed_count = UINT32_MAX;
+    assert(openref_watchdog_gate_report(&gate, 0u, 1010u));
+    assert(openref_watchdog_gate_report(&gate, 1u, 1010u));
+    assert(openref_watchdog_gate_report(&gate, 2u, 1010u));
+    assert(openref_watchdog_gate_should_feed(&gate, 1011u));
+    assert(gate.feed_count == UINT32_MAX);
+}
+
 int main(void)
 {
     test_requires_fresh_progress_from_every_task();
     test_stale_missing_and_clock_faults_fail_closed();
     test_rejects_invalid_reports_and_configuration();
+    test_diagnostic_counters_saturate();
     return 0;
 }

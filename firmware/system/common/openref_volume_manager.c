@@ -63,18 +63,6 @@ bool openref_volume_manager_set_ceiling(
     return true;
 }
 
-bool openref_volume_manager_restore_step(
-    openref_volume_manager_t *manager,
-    uint8_t requested_step)
-{
-    if (manager == NULL || requested_step >= manager->config.step_count) {
-        return false;
-    }
-    manager->requested_step = requested_step > manager->active_ceiling_step ?
-        manager->active_ceiling_step : requested_step;
-    return true;
-}
-
 bool openref_volume_manager_set_mute(
     openref_volume_manager_t *manager,
     uint32_t reason,

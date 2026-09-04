@@ -5,20 +5,6 @@
 #include "openref_network.h"
 #include "openref_network_packet.h"
 
-typedef struct {
-    bool succeed;
-    uint32_t next_epoch;
-    uint32_t calls;
-} epoch_backend_t;
-
-static bool advance_epoch(void *context, uint32_t current, uint32_t *next)
-{
-    epoch_backend_t *backend = context;
-    backend->calls++;
-    *next = backend->next_epoch;
-    return backend->succeed && backend->next_epoch > current;
-}
-
 static void test_slot_calculation(void)
 {
     openref_network_state_t state;
@@ -45,58 +31,6 @@ static void test_coordinator_failure_and_stale_return(void)
     assert(state.coordinator_id == 2u);
     assert(state.coordinator_epoch == 1u);
     assert(!openref_network_receive_heartbeat(&state, 1u, 0u, 0u, 400000u));
-}
-
-static void test_persisted_epoch_required_before_election(void)
-{
-    epoch_backend_t backend = {.succeed = false, .next_epoch = 8u};
-    openref_network_state_t state;
-    openref_network_config_t config = openref_network_default_config(2u);
-    config.initial_coordinator_epoch = 7u;
-    config.require_persisted_epoch = true;
-    config.advance_epoch = advance_epoch;
-    config.epoch_context = &backend;
-    assert(openref_network_init(&state, &config, 0u));
-    openref_network_tick(&state, OPENREF_NETWORK_HEARTBEAT_TIMEOUT_US + 1u);
-    uint64_t election = OPENREF_NETWORK_HEARTBEAT_TIMEOUT_US +
-        OPENREF_NETWORK_ELECTION_DELAY_US + 1u;
-    uint32_t actions = openref_network_tick(&state, election);
-    assert((actions & OPENREF_NETWORK_ACTION_EPOCH_FAILURE) != 0u);
-    assert(state.role == OPENREF_NETWORK_ELECTION);
-    assert(state.coordinator_epoch == 7u && state.epoch_failures == 1u);
-    backend.succeed = true;
-    actions = openref_network_tick(
-        &state, election + OPENREF_NETWORK_ELECTION_DELAY_US + 1u);
-    assert((actions & OPENREF_NETWORK_ACTION_COORDINATOR_CHANGED) != 0u);
-    assert(state.coordinator_epoch == 8u && state.coordinator_id == 2u);
-    assert(backend.calls == 2u);
-}
-
-static void test_epoch_exhaustion_fails_closed(void)
-{
-    openref_network_state_t state;
-    openref_network_config_t config = openref_network_default_config(2u);
-    config.initial_coordinator_epoch = UINT32_MAX;
-    assert(openref_network_init(&state, &config, 0u));
-    openref_network_tick(&state, OPENREF_NETWORK_HEARTBEAT_TIMEOUT_US + 1u);
-    uint32_t actions = openref_network_tick(&state,
-        OPENREF_NETWORK_HEARTBEAT_TIMEOUT_US +
-        OPENREF_NETWORK_ELECTION_DELAY_US + 1u);
-    assert((actions & OPENREF_NETWORK_ACTION_EPOCH_FAILURE) != 0u);
-    assert(state.role == OPENREF_NETWORK_ELECTION);
-}
-
-static void test_same_epoch_tie_selects_lowest_coordinator(void)
-{
-    openref_network_state_t state;
-    openref_network_config_t config = openref_network_default_config(3u);
-    config.initial_coordinator_id = 2u;
-    config.initial_coordinator_epoch = 5u;
-    assert(openref_network_init(&state, &config, 0u));
-    assert(!openref_network_receive_heartbeat(&state, 3u, 5u, 0u, 1u));
-    assert(openref_network_receive_heartbeat(&state, 1u, 5u, 0u, 2u));
-    assert(state.coordinator_id == 1u);
-    assert(!openref_network_receive_heartbeat(&state, 2u, 5u, 0u, 3u));
 }
 
 static void test_sequence_tracking_and_wrap(void)
@@ -180,9 +114,6 @@ int main(void)
 {
     test_slot_calculation();
     test_coordinator_failure_and_stale_return();
-    test_persisted_epoch_required_before_election();
-    test_epoch_exhaustion_fails_closed();
-    test_same_epoch_tie_selects_lowest_coordinator();
     test_sequence_tracking_and_wrap();
     test_reboot_sequence_is_accepted();
     test_network_packet_round_trip();

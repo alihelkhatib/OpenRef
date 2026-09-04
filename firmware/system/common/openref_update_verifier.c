@@ -49,6 +49,14 @@ bool openref_update_verifier_init(openref_update_verifier_t *verifier,
 bool openref_update_verifier_begin(openref_update_verifier_t *verifier,
     const uint8_t wire[OPENREF_UPDATE_MANIFEST_BYTES])
 {
+    /* A completed verifier is reusable, but success must never survive a
+       rejected attempt and be mistaken for approval of the new manifest. */
+    if (verifier != NULL && !verifier->active) {
+        verifier->verified = false;
+        verifier->received_bytes = 0u;
+        memset(&verifier->manifest, 0, sizeof(verifier->manifest));
+        memset(verifier->manifest_wire, 0, sizeof(verifier->manifest_wire));
+    }
     if (verifier == NULL || wire == NULL || verifier->active ||
         wire[0] != 0x4fu || wire[1] != 0x52u || wire[2] != 0x55u ||
         wire[3] != 0x50u || wire[4] != 1u || wire[6] != 0u || wire[7] != 0u) {
@@ -84,6 +92,7 @@ bool openref_update_verifier_begin(openref_update_verifier_t *verifier,
         return false;
     }
     verifier->manifest = manifest;
+    memcpy(verifier->manifest_wire, wire, sizeof(verifier->manifest_wire));
     verifier->received_bytes = 0u;
     verifier->verified = false;
     verifier->active = true;

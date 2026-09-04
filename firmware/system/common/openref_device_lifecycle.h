@@ -47,8 +47,6 @@ typedef struct {
     uint32_t backend_failures;
 } openref_device_lifecycle_t;
 
-bool openref_device_record_valid(const openref_device_record_t *record);
-
 bool openref_device_lifecycle_init(
     openref_device_lifecycle_t *lifecycle,
     openref_device_backend_t backend,

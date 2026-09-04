@@ -56,6 +56,7 @@ typedef struct {
     openref_update_platform_t platform;
     openref_update_crypto_t crypto;
     openref_update_manifest_t manifest;
+    uint8_t manifest_wire[OPENREF_UPDATE_MANIFEST_BYTES];
     uint32_t received_bytes;
     uint32_t rejected_manifests;
     uint32_t hash_failures;
