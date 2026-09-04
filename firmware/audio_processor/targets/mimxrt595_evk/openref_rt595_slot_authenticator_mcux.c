@@ -1,0 +1,4 @@
+#include "openref_rt595_slot_authenticator_mcux.h"
+#include <string.h>
+static bool rd(void*c,uint32_t a,uint8_t*d,uint32_t n){openref_rt595_slot_authenticator_mcux_t*m=c;uint32_t aligned[OPENREF_RT595_SLOT_AUTH_CHUNK_BYTES/4u];if(!d||n==0u||n>sizeof(aligned))return false;if(IAP_FlexspiNorRead(m->instance,m->config,aligned,a,n)!=kStatus_Success)return false;memcpy(d,aligned,n);return true;}
+bool openref_rt595_slot_authenticator_mcux_init(openref_rt595_slot_authenticator_mcux_t*m,uint32_t i,flexspi_nor_config_t*c,const openref_update_platform_t*p,openref_update_crypto_t crypto,uint32_t m0,uint32_t i0,uint32_t n0,uint32_t m1,uint32_t i1,uint32_t n1){if(!m||!c||i!=0u)return false;memset(m,0,sizeof(*m));m->instance=i;m->config=c;openref_rt595_slot_reader_t r={rd,m};return openref_rt595_slot_authenticator_init(&m->authenticator,r,p,crypto,m0,i0,n0,m1,i1,n1);}

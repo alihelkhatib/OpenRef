@@ -1,0 +1,8 @@
+#include "openref_rt595_update_crypto_mcux.h"
+#include "mbedtls/ecdsa.h"
+#include <string.h>
+static bool hb(void*c){openref_rt595_update_crypto_mcux_t*m=c;return HASHCRYPT_SHA_Init(HASHCRYPT,&m->hash,kHASHCRYPT_Sha256)==kStatus_Success;}
+static bool hu(void*c,const uint8_t*d,uint32_t n){openref_rt595_update_crypto_mcux_t*m=c;return HASHCRYPT_SHA_Update(HASHCRYPT,&m->hash,d,n)==kStatus_Success;}
+static bool hf(void*c,uint8_t*d){openref_rt595_update_crypto_mcux_t*m=c;size_t n=32u;return HASHCRYPT_SHA_Finish(HASHCRYPT,&m->hash,d,&n)==kStatus_Success&&n==32u;}
+static bool verify(void*c,const uint8_t p[64],const uint8_t h[32],const uint8_t s[64]){(void)c;mbedtls_ecp_group g;mbedtls_ecp_point q;mbedtls_mpi r,z;int rc;mbedtls_ecp_group_init(&g);mbedtls_ecp_point_init(&q);mbedtls_mpi_init(&r);mbedtls_mpi_init(&z);rc=mbedtls_ecp_group_load(&g,MBEDTLS_ECP_DP_SECP256R1);if(rc==0)rc=mbedtls_mpi_read_binary(&q.MBEDTLS_PRIVATE(X),p,32);if(rc==0)rc=mbedtls_mpi_read_binary(&q.MBEDTLS_PRIVATE(Y),p+32,32);if(rc==0)rc=mbedtls_mpi_lset(&q.MBEDTLS_PRIVATE(Z),1);if(rc==0)rc=mbedtls_ecp_check_pubkey(&g,&q);if(rc==0)rc=mbedtls_mpi_read_binary(&r,s,32);if(rc==0)rc=mbedtls_mpi_read_binary(&z,s+32,32);if(rc==0)rc=mbedtls_ecdsa_verify(&g,h,32,&q,&r,&z);mbedtls_mpi_free(&z);mbedtls_mpi_free(&r);mbedtls_ecp_point_free(&q);mbedtls_ecp_group_free(&g);return rc==0;}
+bool openref_rt595_update_crypto_mcux_init(openref_rt595_update_crypto_mcux_t*m,const uint8_t id[8],const uint8_t pk[64]){if(!m)return false;memset(m,0,sizeof(*m));HASHCRYPT_Init(HASHCRYPT);openref_rt595_update_crypto_driver_t d={hb,hu,hf,verify,m};return openref_rt595_update_crypto_init(&m->crypto,d,id,pk);}

@@ -1,0 +1,6 @@
+#include "openref_rt595_update_staging_mcux.h"
+#include <string.h>
+static bool rd(void*c,uint32_t a,uint8_t*d,uint32_t n){openref_rt595_update_staging_mcux_t*m=c;uint32_t b[OPENREF_RT595_UPDATE_MAX_PAGE_BYTES/4];if(n>sizeof(b)||n%4)return false;if(IAP_FlexspiNorRead(m->instance,m->config,b,a,n)!=kStatus_Success)return false;memcpy(d,b,n);return true;}
+static bool er(void*c,uint32_t a,uint32_t n){openref_rt595_update_staging_mcux_t*m=c;return IAP_FlexspiNorErase(m->instance,m->config,a,n)==kStatus_Success;}
+static bool pg(void*c,uint32_t a,const uint8_t*d,uint32_t n){openref_rt595_update_staging_mcux_t*m=c;uint32_t b[OPENREF_RT595_UPDATE_MAX_PAGE_BYTES/4];if(n!=m->config->pageSize||n>sizeof(b)||a%n)return false;memcpy(b,d,n);return IAP_FlexspiNorPageProgram(m->instance,m->config,a,b)==kStatus_Success;}
+bool openref_rt595_update_staging_mcux_init(openref_rt595_update_staging_mcux_t*m,uint32_t i,flexspi_nor_config_t*c,uint32_t flash,uint32_t manifest,uint32_t base,uint32_t cap){openref_rt595_update_flash_t f;if(!m||!c||i!=0||manifest>=flash||base>=flash||cap>flash-base)return false;memset(m,0,sizeof(*m));m->config=c;m->instance=i;f.read=rd;f.erase=er;f.program=pg;f.context=m;return openref_rt595_update_staging_init(&m->staging,f,manifest,base,cap,c->sectorSize,c->pageSize);}

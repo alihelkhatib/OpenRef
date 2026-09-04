@@ -1,0 +1,43 @@
+#ifndef OPENREF_RT595_BOARD_RESOURCES_H
+#define OPENREF_RT595_BOARD_RESOURCES_H
+
+/* SDK-backed EVK resource allocation. */
+#define OPENREF_RT595_FLEXCOMM_DEBUG 0u
+#define OPENREF_RT595_FLEXCOMM_I2S_TX 3u
+#define OPENREF_RT595_FLEXCOMM_SPI 5u
+#define OPENREF_RT595_DMA_I2S_TX 7u
+#define OPENREF_RT595_DMA_SPI_RX 10u
+#define OPENREF_RT595_DMA_SPI_TX 11u
+#define OPENREF_RT595_DMA_DMIC_RX 16u
+
+#define OPENREF_RT595_SPI_SCK_PORT 1u
+#define OPENREF_RT595_SPI_SCK_PIN 3u
+#define OPENREF_RT595_SPI_CIPO_PORT 1u
+#define OPENREF_RT595_SPI_CIPO_PIN 4u
+#define OPENREF_RT595_SPI_COPI_PORT 1u
+#define OPENREF_RT595_SPI_COPI_PIN 5u
+#define OPENREF_RT595_SPI_SSEL0_PORT 1u
+#define OPENREF_RT595_SPI_SSEL0_PIN 6u
+#define OPENREF_RT595_AUDIO_REQUEST_PORT 1u
+#define OPENREF_RT595_AUDIO_REQUEST_PIN 14u /* J36 pin 1 */
+
+#define OPENREF_RT595_DMIC_CLOCK_DIVIDER 24u
+#define OPENREF_RT595_I2S_CLOCK_DIVIDER 48u
+
+_Static_assert(OPENREF_RT595_FLEXCOMM_DEBUG != OPENREF_RT595_FLEXCOMM_I2S_TX,
+               "I2S must not take the live debug-console Flexcomm");
+_Static_assert(OPENREF_RT595_FLEXCOMM_SPI != OPENREF_RT595_FLEXCOMM_I2S_TX,
+               "SPI and I2S require distinct Flexcomm instances");
+_Static_assert(OPENREF_RT595_DMA_I2S_TX != OPENREF_RT595_DMA_SPI_RX &&
+               OPENREF_RT595_DMA_I2S_TX != OPENREF_RT595_DMA_SPI_TX &&
+               OPENREF_RT595_DMA_I2S_TX != OPENREF_RT595_DMA_DMIC_RX &&
+               OPENREF_RT595_DMA_SPI_RX != OPENREF_RT595_DMA_SPI_TX &&
+               OPENREF_RT595_DMA_SPI_RX != OPENREF_RT595_DMA_DMIC_RX &&
+               OPENREF_RT595_DMA_SPI_TX != OPENREF_RT595_DMA_DMIC_RX,
+               "RT595 DMA channels must be unique");
+_Static_assert(24576000u / OPENREF_RT595_DMIC_CLOCK_DIVIDER / 2u / 32u == 16000u,
+               "DMIC clock no longer produces 16 kHz with 2fs/OSR32");
+_Static_assert(24576000u / OPENREF_RT595_I2S_CLOCK_DIVIDER / 16u / 2u == 16000u,
+               "I2S clock no longer produces 16 kHz stereo/16-bit");
+
+#endif

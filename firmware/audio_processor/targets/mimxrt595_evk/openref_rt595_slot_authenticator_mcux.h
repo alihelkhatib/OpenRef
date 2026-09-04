@@ -1,0 +1,7 @@
+#ifndef OPENREF_RT595_SLOT_AUTHENTICATOR_MCUX_H
+#define OPENREF_RT595_SLOT_AUTHENTICATOR_MCUX_H
+#include "fsl_iap.h"
+#include "openref_rt595_slot_authenticator.h"
+typedef struct {openref_rt595_slot_authenticator_t authenticator;uint32_t instance;flexspi_nor_config_t *config;} openref_rt595_slot_authenticator_mcux_t;
+bool openref_rt595_slot_authenticator_mcux_init(openref_rt595_slot_authenticator_mcux_t *,uint32_t,flexspi_nor_config_t *,const openref_update_platform_t *,openref_update_crypto_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
+#endif
