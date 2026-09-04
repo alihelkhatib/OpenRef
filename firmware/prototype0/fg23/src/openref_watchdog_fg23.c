@@ -1,114 +1,99 @@
 #include "openref_watchdog_fg23.h"
 
+#include <limits.h>
 #include <stddef.h>
+#include <string.h>
 
-#if defined(OPENREF_APP_WATCHDOG_FG23)
-#include "em_wdog.h"
-#endif
-
-static const uint32_t watchdog_period_ms[] = {
-    9u, 17u, 33u, 65u, 129u, 257u, 513u, 1025u,
-    2049u, 4097u, 8193u, 16385u, 32769u, 65537u, 131073u, 262145u,
-};
-
-bool openref_watchdog_fg23_select_period(
-    uint32_t requested_timeout_ms,
-    uint8_t *period_selector,
-    uint32_t *effective_timeout_ms)
+static void increment_saturating(uint32_t *value)
 {
-    size_t index;
+    if (*value != UINT32_MAX) {
+        (*value)++;
+    }
+}
 
-    if (requested_timeout_ms == 0u || period_selector == NULL ||
-        effective_timeout_ms == NULL) {
+static uint64_t clock_ms(openref_watchdog_fg23_t *watchdog)
+{
+    uint32_t current_us = watchdog->hooks.clock_us(watchdog->hooks.context);
+    if (!watchdog->clock_initialized) {
+        watchdog->previous_clock_us = current_us;
+        watchdog->extended_clock_us = current_us;
+        watchdog->clock_initialized = true;
+        return watchdog->extended_clock_us / 1000u;
+    }
+
+    uint32_t delta_us = current_us - watchdog->previous_clock_us;
+    if (current_us < watchdog->previous_clock_us && delta_us > INT32_MAX) {
+        /* A small backwards step is a faulty clock, not 2^32-us wrap. */
+        if (!watchdog->clock_fault_latched) {
+            increment_saturating(&watchdog->clock_faults);
+        }
+        watchdog->clock_fault_latched = true;
+        return watchdog->extended_clock_us == 0u
+            ? 0u : watchdog->extended_clock_us / 1000u - 1u;
+    }
+    watchdog->previous_clock_us = current_us;
+    watchdog->extended_clock_us += delta_us;
+    return watchdog->extended_clock_us / 1000u;
+}
+
+bool openref_watchdog_fg23_init(
+    openref_watchdog_fg23_t *watchdog,
+    const openref_watchdog_fg23_config_t *config,
+    openref_watchdog_fg23_hooks_t hooks)
+{
+    if (watchdog == NULL) {
         return false;
     }
-    for (index = 0u; index <
-         (sizeof(watchdog_period_ms) / sizeof(watchdog_period_ms[0])); index++) {
-        if (watchdog_period_ms[index] >= requested_timeout_ms) {
-            *period_selector = (uint8_t)index;
-            *effective_timeout_ms = watchdog_period_ms[index];
-            return true;
+    memset(watchdog, 0, sizeof(*watchdog));
+    if (config == NULL || hooks.hardware_init == NULL ||
+        hooks.hardware_feed == NULL || hooks.clock_us == NULL ||
+        config->hardware_timeout_ms == 0u ||
+        config->hardware_timeout_ms <= config->gate.startup_grace_ms) {
+        return false;
+    }
+    for (uint8_t task = 0u; task < OPENREF_WATCHDOG_MAX_TASKS; task++) {
+        if ((config->gate.required_mask & (uint8_t)(1u << task)) != 0u &&
+            config->hardware_timeout_ms <= config->gate.task_timeout_ms[task]) {
+            return false;
         }
     }
-    return false;
-}
-
-bool openref_watchdog_fg23_configure(void *context, uint32_t timeout_ms)
-{
-    openref_watchdog_fg23_t *target = context;
-    uint8_t selector;
-    uint32_t effective_timeout_ms;
-
-    if (target == NULL || target->configured ||
-        !openref_watchdog_fg23_select_period(
-            timeout_ms, &selector, &effective_timeout_ms)) {
+    watchdog->hooks = hooks;
+    uint64_t now_ms = clock_ms(watchdog);
+    if (!openref_watchdog_gate_init(&watchdog->gate, &config->gate, now_ms)) {
         return false;
     }
-
-#if defined(OPENREF_APP_WATCHDOG_FG23)
-    {
-        WDOG_Init_TypeDef init = WDOG_INIT_DEFAULT;
-        init.debugRun = false;
-        init.em1Run = true;
-        init.em2Run = true;
-        init.em3Run = true;
-        init.lock = true;
-        init.perSel = (WDOG_PeriodSel_TypeDef)selector;
-        WDOGn_Init(WDOG0, &init);
-        WDOGn_SyncWait(WDOG0);
-    }
-    target->requested_timeout_ms = timeout_ms;
-    target->effective_timeout_ms = effective_timeout_ms;
-    target->period_selector = selector;
-    target->configured = true;
-    return true;
-#else
-    (void)selector;
-    (void)effective_timeout_ms;
-    return false;
-#endif
-}
-
-bool openref_watchdog_fg23_feed(void *context)
-{
-    openref_watchdog_fg23_t *target = context;
-
-    if (target == NULL || !target->configured) {
+    if (!hooks.hardware_init(hooks.context, config->hardware_timeout_ms)) {
         return false;
     }
-#if defined(OPENREF_APP_WATCHDOG_FG23)
-    WDOGn_Feed(WDOG0);
+    watchdog->initialized = true;
     return true;
-#else
-    return false;
-#endif
 }
 
-uint64_t openref_watchdog_fg23_monotonic_ms(
-    openref_watchdog_fg23_clock_t *clock,
-    uint32_t raw_time_us)
+bool openref_watchdog_fg23_report(
+    openref_watchdog_fg23_t *watchdog,
+    uint8_t task_index)
 {
-    if (clock == NULL) {
-        return 0u;
+    if (watchdog == NULL || !watchdog->initialized) {
+        return false;
     }
-    if (!clock->initialized) {
-        clock->previous_us = raw_time_us;
-        clock->initialized = true;
-    } else {
-        if (raw_time_us < clock->previous_us) {
-            clock->epoch_us += (UINT64_C(1) << 32);
-        }
-        clock->previous_us = raw_time_us;
-    }
-    return (clock->epoch_us + raw_time_us) / UINT64_C(1000);
+    uint64_t now_ms = clock_ms(watchdog);
+    return !watchdog->clock_fault_latched &&
+        openref_watchdog_gate_report(&watchdog->gate, task_index, now_ms);
 }
 
-openref_watchdog_backend_t openref_watchdog_fg23_backend(
-    openref_watchdog_fg23_t *context)
+bool openref_watchdog_fg23_process(openref_watchdog_fg23_t *watchdog)
 {
-    openref_watchdog_backend_t backend;
-    backend.configure = openref_watchdog_fg23_configure;
-    backend.feed = openref_watchdog_fg23_feed;
-    backend.context = context;
-    return backend;
+    if (watchdog == NULL || !watchdog->initialized) {
+        return false;
+    }
+    uint64_t now_ms = clock_ms(watchdog);
+    if (watchdog->clock_fault_latched ||
+        !openref_watchdog_gate_should_feed(&watchdog->gate, now_ms)) {
+        return false;
+    }
+    if (!watchdog->hooks.hardware_feed(watchdog->hooks.context)) {
+        increment_saturating(&watchdog->hardware_feed_failures);
+        return false;
+    }
+    return true;
 }

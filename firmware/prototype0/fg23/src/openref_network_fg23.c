@@ -8,12 +8,7 @@
 
 #include "app_common.h"
 #include "openref_network.h"
-#include "openref_network_epoch_fg23.h"
 #include "openref_network_packet.h"
-#ifdef OPENREF_APP_NETWORK_SECURITY
-#include "openref_secure_transport.h"
-#include "openref_security_fg23.h"
-#endif
 
 #ifndef OPENREF_APP_NETWORK_NODE_ID
 #define OPENREF_APP_NETWORK_NODE_ID 1u
@@ -23,12 +18,6 @@
 #define OPENREF_NETWORK_SCHEDULE_LEAD_US 3000u
 #define OPENREF_NETWORK_CONTROL_SLOT_US 15000u
 #define OPENREF_NETWORK_REPORT_EVERY 250u
-
-#ifdef OPENREF_APP_NETWORK_SECURITY
-#define OPENREF_NETWORK_RADIO_PACKET_BYTES OPENREF_SECURE_NETWORK_PACKET_BYTES
-#else
-#define OPENREF_NETWORK_RADIO_PACKET_BYTES OPENREF_NETWORK_PACKET_BYTES
-#endif
 
 static openref_network_state_t network_state;
 static bool network_configured;
@@ -44,73 +33,6 @@ static uint64_t next_control_slot_us;
 static uint32_t rx_packets;
 static uint32_t parse_failures;
 static uint32_t schedule_failures;
-#ifdef OPENREF_APP_NETWORK_SECURITY
-static openref_security_fg23_t security_context;
-static openref_secure_transport_t secure_transport;
-static bool security_configured;
-static bool security_wait_reported;
-#endif
-
-#ifdef OPENREF_APP_NETWORK_SECURITY
-static void secure_wipe(void *data, uint16_t length)
-{
-    volatile uint8_t *cursor = data;
-    for (uint16_t index = 0u; index < length; index++) {
-        cursor[index] = 0u;
-    }
-}
-#endif
-
-bool openref_network_fg23_configure_security(
-    uint32_t crew_session_id,
-    uint32_t boot_counter,
-    uint32_t initial_packet_counter,
-    const uint8_t crew_session_key[16])
-{
-#ifdef OPENREF_APP_NETWORK_SECURITY
-    if (network_configured || crew_session_key == NULL ||
-        !openref_security_fg23_init(&security_context, crew_session_key) ||
-        !openref_secure_transport_init(&secure_transport,
-            openref_security_fg23_encrypt, openref_security_fg23_decrypt,
-            &security_context, crew_session_id, boot_counter,
-            initial_packet_counter)) {
-        security_configured = false;
-        return false;
-    }
-    security_configured = true;
-    security_wait_reported = false;
-    return true;
-#else
-    (void)crew_session_id;
-    (void)boot_counter;
-    (void)initial_packet_counter;
-    (void)crew_session_key;
-    return false;
-#endif
-}
-
-bool openref_network_fg23_clear_security(void)
-{
-#ifdef OPENREF_APP_NETWORK_SECURITY
-    bool stopped = true;
-    if (railHandle != NULL) {
-        stopped = RAIL_Idle(railHandle, RAIL_IDLE_ABORT, false) ==
-            RAIL_STATUS_NO_ERROR;
-        rxHeld = false;
-    }
-    network_configured = false;
-    tx_pending = false;
-    heartbeat_pending = false;
-    schedule_synchronized = false;
-    security_configured = false;
-    security_wait_reported = false;
-    secure_wipe(&secure_transport, sizeof(secure_transport));
-    secure_wipe(&security_context, sizeof(security_context));
-    return stopped;
-#else
-    return false;
-#endif
-}
 
 static uint32_t tx_completion_count(void)
 {
@@ -148,29 +70,17 @@ static void process_rx(void)
             return;
         }
 
-        uint8_t radio_packet[OPENREF_NETWORK_RADIO_PACKET_BYTES];
         uint8_t packet[OPENREF_NETWORK_PACKET_BYTES];
         bool copied = info.packetStatus == RAIL_RX_PACKET_READY_SUCCESS &&
-            info.packetBytes == sizeof(radio_packet);
+            info.packetBytes == sizeof(packet);
         if (copied) {
-            RAIL_CopyRxPacket(radio_packet, &info);
+            RAIL_CopyRxPacket(packet, &info);
         }
         (void)RAIL_ReleaseRxPacket(railHandle, handle);
         if (packetsHeld > 0u) {
             packetsHeld--;
         }
 
-        if (copied) {
-#ifdef OPENREF_APP_NETWORK_SECURITY
-            openref_security_replay_result_t replay_result;
-            copied = openref_secure_transport_open(&secure_transport,
-                radio_packet, packet, &replay_result);
-#else
-            for (uint16_t index = 0u; index < sizeof(packet); index++) {
-                packet[index] = radio_packet[index];
-            }
-#endif
-        }
         openref_proto0_packet_header_t header;
         if (!copied || !openref_network_parse_packet(packet, sizeof(packet), &header)) {
             parse_failures++;
@@ -234,7 +144,6 @@ static void process_rx(void)
 static bool schedule_packet(bool heartbeat, uint64_t scheduled_us)
 {
     uint8_t packet[OPENREF_NETWORK_PACKET_BYTES];
-    uint8_t radio_packet[OPENREF_NETWORK_RADIO_PACKET_BYTES];
     uint16_t length;
     if (heartbeat) {
         openref_network_heartbeat_t body = {
@@ -256,23 +165,8 @@ static bool schedule_packet(bool heartbeat, uint64_t scheduled_us)
             packet,
             sizeof(packet));
     }
-    if (length != sizeof(packet)) {
-        schedule_failures++;
-        return false;
-    }
-#ifdef OPENREF_APP_NETWORK_SECURITY
-    if (!openref_secure_transport_protect(
-            &secure_transport, packet, radio_packet)) {
-        schedule_failures++;
-        return false;
-    }
-#else
-    for (uint16_t index = 0u; index < sizeof(packet); index++) {
-        radio_packet[index] = packet[index];
-    }
-#endif
-    length = sizeof(radio_packet);
-    if (RAIL_WriteTxFifo(railHandle, radio_packet, length, true) != length) {
+    if (length != sizeof(packet) ||
+        RAIL_WriteTxFifo(railHandle, packet, length, true) != length) {
         schedule_failures++;
         return false;
     }
@@ -306,37 +200,16 @@ void openref_network_fg23_process(void)
         return;
     }
     if (!network_configured) {
-#ifdef OPENREF_APP_NETWORK_SECURITY
-        if (!security_configured) {
-            if (!security_wait_reported) {
-                printf("\r\n{{(openrefNetwork)}{Status:SecurityNotProvisioned}{Node:%u}}}\r\n",
-                       (unsigned int)OPENREF_APP_NETWORK_NODE_ID);
-                security_wait_reported = true;
-            }
-            return;
-        }
-#endif
         openref_network_config_t config =
             openref_network_default_config((uint8_t)OPENREF_APP_NETWORK_NODE_ID);
         config.member_mask = OPENREF_NETWORK_MEMBER_MASK;
-#ifdef OPENREF_APP_NETWORK_EPOCH_NVM3
-        if (!openref_network_epoch_fg23_load(
-                &config.initial_coordinator_epoch)) {
-            printf("\r\n{{(openrefNetwork)}{Status:EpochLoadFail}{Node:%u}}}\r\n",
-                   (unsigned int)config.node_id);
-            return;
-        }
-        config.advance_epoch = openref_network_epoch_fg23_advance;
-        config.require_persisted_epoch = true;
-#endif
         uint64_t now_us = RAIL_GetTime();
         if (!openref_network_init(&network_state, &config, now_us)) {
             printf("\r\n{{(openrefNetwork)}{Status:SelfTestFail}{Node:%u}}}\r\n",
                    (unsigned int)config.node_id);
             return;
         }
-        uint16_t fixed_length = RAIL_SetFixedLength(
-            railHandle, OPENREF_NETWORK_RADIO_PACKET_BYTES);
+        uint16_t fixed_length = RAIL_SetFixedLength(railHandle, OPENREF_NETWORK_PACKET_BYTES);
         RAIL_ConfigEvents(
             railHandle,
             RAIL_EVENT_TX_STARTED | RAIL_EVENTS_TX_COMPLETION,
@@ -431,18 +304,5 @@ void openref_network_fg23_process(void)
 
 void openref_network_fg23_init(void) {}
 void openref_network_fg23_process(void) {}
-bool openref_network_fg23_configure_security(
-    uint32_t crew_session_id,
-    uint32_t boot_counter,
-    uint32_t initial_packet_counter,
-    const uint8_t crew_session_key[16])
-{
-    (void)crew_session_id;
-    (void)boot_counter;
-    (void)initial_packet_counter;
-    (void)crew_session_key;
-    return false;
-}
-bool openref_network_fg23_clear_security(void) { return false; }
 
 #endif
