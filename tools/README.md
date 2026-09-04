@@ -5,6 +5,24 @@ Small repository-owned scripts for analysis, validation, and prototype evidence.
 Tools should avoid machine-specific paths and should be runnable from a clean
 checkout with documented dependencies.
 
+## RT595 Release Bundle
+
+`assemble_rt595_release_bundle.py` creates a self-contained handoff directory
+from a bootstrap binary, slot-linked application, signed slot package, canonical
+flash layout and reports, public trust anchor, and release provenance. It
+re-verifies the signature and enforces slot, address, version, key-ID, payload
+hash, vector-table, layout, and provenance consistency. Assembly refuses to
+overwrite or merge an existing directory.
+
+The command deliberately has no private-key argument. Signing happens earlier
+with `package_rt595_signed_slot.py`; only the public key enters the bundle. Run
+the `assemble` command and then independently run `verify BUNDLE_DIRECTORY`.
+`bundle.json` records `release_ready: false` unless `--reviewed-evidence`
+supplies a strict `openref.rt595.release-review.v1` approval from an identified
+independent reviewer, timestamped and bound to the exact subject hashes, slot,
+version, and key ID. A passing build or provenance inventory alone cannot
+promote readiness.
+
 ## Serial Capture
 
 List serial ports:
@@ -701,3 +719,46 @@ Run tool tests:
 ```bash
 python -B -m pytest -p no:cacheprovider tools/tests --basetemp .pytest-tmp
 ```
+
+## Prototype 1 readiness inputs
+
+Generate or validate the nine evidence/design inputs that remain open before
+Prototype 1 schematic review:
+
+```text
+python tools/prototype1_readiness_inputs.py --template --json hardware/prototype1-wearable/readiness-inputs-YYYYMMDD.json
+python tools/prototype1_readiness_inputs.py --check --json hardware/prototype1-wearable/readiness-inputs-YYYYMMDD.json
+```
+
+An input may be marked `verified` only with a concrete `value`, reviewer,
+timezone-qualified timestamp, and at least one current SHA-256-bound evidence
+artifact. The checker remains non-passing for `open` inputs and does not treat
+vendor estimates as measured OpenRef evidence.
+# Release artifact provenance
+
+`create_release_provenance.py` emits a deterministic JSON inventory for an
+RT595 release candidate. It binds each ELF, map, configuration, and validation
+report to its byte count and SHA-256 digest; records the exact Git HEAD,
+tracked-diff digest, porcelain status, and hashes of untracked source files;
+and records explicitly supplied toolchain versions. The output always carries
+`release_ready: false`: it is an artifact/provenance record, not a substitute
+for `audit_mvp_readiness.py` or missing physical evidence.
+
+Example (paths may point into the ignored local SDK build directory):
+
+```powershell
+python tools/create_release_provenance.py `
+  --output artifacts/local/release/rt595-integrated-provenance.json `
+  --artifact firmware_elf=artifacts/local/rt595-sdk/build/openref_rt595_integrated/openref_rt595_integrated_cm33.elf `
+  --artifact linker_map=artifacts/local/rt595-sdk/build/openref_rt595_integrated/output.map `
+  --artifact flash_layout=firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_flash_layout.json `
+  --validation native=passed:artifacts/local/reports/native-tests.txt `
+  --tool arm_gnu=14.3.1 --tool mcuxsdk=26.06.00-LTS
+```
+
+Validation status is caller-declared and must be bound to a report file. The
+generator never infers success from a filename or console text. External file
+locations are reduced to basenames to avoid embedding machine-specific paths.
+`verify_release_provenance.py` rechecks repository state and all hashes. Supply
+the current path for every external record with `--artifact ROLE=PATH` or
+`--validation NAME=PATH`; repository-scoped records resolve automatically.

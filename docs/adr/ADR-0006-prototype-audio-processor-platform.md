@@ -25,6 +25,32 @@ This selects a validation platform, not the production MCU. Production
 selection still requires measured timing, power, package/layout, toolchain,
 cost, lifecycle, and supply evidence.
 
+## Vendor correspondence
+
+The following correspondence informs the candidate list but is not measured
+promotion evidence:
+
+- On 2026-08-17, an Ambiq field applications engineer assessed Apollo510 as a
+  plausible fit, expecting sustained 250 MHz high-performance operation for a
+  workload he estimated near 200 MIPS when six-channel mixing, echo
+  cancellation, and noise suppression are included. He supplied a preliminary
+  processor estimate of 11.75 mW (about 6.53 mA at the assumed rail). Those
+  figures are vendor estimates for a broader workload, not OpenRef benchmark
+  measurements. Ambiq subsequently reported that it had no loan board
+  available; a local representative requested a project discussion.
+- On 2026-08-20, Analog Devices Processor Applications Support recommended
+  ADSP-BF706 or ADSP-BF707 as the most suitable members of its current
+  Blackfin+ family for the supplied requirements. Evaluation-board selection
+  and access remain under discussion.
+- The NXP MIMXRT595-EVK and XMOS XU316 requests sent on 2026-08-14 have no
+  vendor response in the referenced mailbox threads as of 2026-08-20.
+
+Mail correspondence is mutable and access-controlled, so release decisions
+must cite a reviewed engineering record containing the relevant vendor date,
+role, assumptions, and any permitted quotation or attachment. It cannot
+replace the processor-neutral paced benchmark, current capture, or lifecycle
+and commercial review.
+
 ## Alternative
 
 The NUCLEO-H563ZI is the fallback. STM32H563 provides a 250 MHz Cortex-M33,
@@ -51,4 +77,3 @@ The RT595 prototype is accepted only after it demonstrates:
    and overflow fault injection;
 5. no stale playback and correct PLC for either missing half-frame;
 6. measured active and sleep current for the power trade study.
-

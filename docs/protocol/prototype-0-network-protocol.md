@@ -1,8 +1,8 @@
 # Prototype 0 Network Protocol
 
 **Document ID:** OR-PRO-002  
-**Revision:** 0.2
-**Status:** Three-board payload passed; portable security and admission implemented
+**Revision:** 0.1  
+**Status:** Three-board 80-byte LC3 payload passed; secured envelope simulated
 
 ## Purpose
 
@@ -67,75 +67,8 @@ replay window are specified in `OR-SEC-001`.
 
 The coordinator broadcasts a heartbeat every 100 ms. A node considers the
 coordinator absent after 300 ms without a valid heartbeat. Prototype 0 then waits
-50 ms and selects the lowest eligible active node.
-
-Every authenticated heartbeat carries a 32-bit coordinator epoch and schedule
-origin. A candidate must durably advance the epoch to a strictly greater value
-before announcing itself coordinator. Persistence failure leaves the node in
-election and produces `OPENREF_NETWORK_ACTION_EPOCH_FAILURE`; it does not permit
-a volatile coordinator announcement. Epoch exhaustion also fails closed and
-requires authenticated service recovery rather than wrapping to zero.
-
-Receivers reject lower epochs. For competing authenticated coordinators at the
-same epoch, the lower node ID wins deterministically; higher IDs are rejected.
-This resolves equal-epoch observations while a formerly isolated coordinator
-with an older epoch cannot reclaim the schedule after returning.
-
-The default development configuration permits an in-memory increment so the
-existing Prototype 0 overlay remains reproducible. Product configurations set
-`require_persisted_epoch` and provide a power-loss-safe backend. The persisted
-epoch belongs to the crew/session state and is distinct from the packet-nonce
-boot counter.
-
-The FG23 backend `openref_network_epoch_fg23` stores the epoch at NVM3 key
-`0x0f5202`, distinct from boot-counter key `0x0f5201`. It loads the value before
-network initialization, rejects mismatch with the caller's current epoch,
-writes the increment, and verifies readback. The repository overlay enables it
-with `-EnablePersistentEpoch`, which requires network mode. Enabled source
-compiles against the installed Silicon Labs SDK; live power-cut evidence is
-still required before promotion.
-
-## Authenticated Crew Admission
-
-A device accepts invitations only during a bounded window opened by a physical
-join action. It generates a fresh 32-byte challenge using the target secure RNG.
-The coordinator returns one fixed 168-byte invitation; bytes 0 through 103 are
-the signed region.
-
-| Offset | Bytes | Field |
-|---:|---:|---|
-| 0 | 4 | Magic `ORJN` |
-| 4 | 1 | Admission version `1` |
-| 5 | 1 | Assigned local node ID, 1 through 6 |
-| 6 | 1 | Complete six-bit member mask |
-| 7 | 1 | Member count, 2 through 6 |
-| 8 | 4 | Nonzero crew session ID |
-| 12 | 4 | Strictly increasing per-device admission counter |
-| 16 | 32 | Device challenge |
-| 48 | 8 | Trusted coordinator public-identity fingerprint |
-| 56 | 16 | Roster/transcript digest |
-| 72 | 32 | Session key wrapped specifically for this device/transcript |
-| 104 | 64 | Coordinator signature over bytes 0 through 103 |
-
-The receiver validates field consistency, its challenge, coordinator identity,
-signature, and replay counter before unwrapping. It durably advances the counter
-before installing the 128-bit crew key through `openref_crew_session`; a failed
-install consumes the invitation rather than allowing replay. Raw keys and
-challenges are wiped after use. Wrong, expired, malformed, untrusted, replayed,
-or unwrap-failed invitations close the window and contribute to bounded lockout.
-
-The invitation fits existing control-packet payload capacity but does not share
-the voice security envelope because the crew key does not exist yet. Target
-cryptography must bind the wrapped key to the intended device identity and the
-entire signed transcript. The approved signature and wrapping/KEM algorithms,
-coordinator trust establishment, and multi-device formation UX require security
-review and live validation.
-
-On FG23, the invitation replay counter uses verified NVM3 domain key
-`0x0f5203`. `openref_security_counter_fg23_load` initializes the portable
-admission state, and `openref_security_counter_fg23_persist` is the persist
-callback with an admission-domain context. The same adapter exposes a distinct
-service domain; the complete target object map is `OR-ARC-019`.
+50 ms and selects the lowest eligible active node. Later revisions will add an
+epoch and election priority so stale coordinators cannot reclaim the schedule.
 
 ## Four-Board Acceptance
 
@@ -156,7 +89,7 @@ available.
 
 ## Implementation Status
 
-The vendor-independent state machine, epoch-bearing heartbeat packet layer,
+The vendor-independent state machine, fixed-length audio/heartbeat packet layer,
 and FG23 scheduled RAIL adapter are implemented. A three-board live run on
 2026-08-14 passed the final 80-byte LC3 payload size, coordinator replacement,
 and rebooted-node rejoin with zero final-capture parse or scheduling failures.

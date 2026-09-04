@@ -1,8 +1,8 @@
 # Device Identity Lifecycle
 
 **Document ID:** OR-MFG-003
-**Revision:** 0.2
-**Status:** Portable policy and FG23 lifecycle persistence implemented; secure identity backend pending
+**Revision:** 0.1
+**Status:** Portable policy implemented; secure backend pending
 
 ## States and Allowed Direction
 
@@ -44,13 +44,6 @@ verify irreversible debug and key operations. The production result schema is
 version 2 and records the final lifecycle state plus the public fingerprint. A
 `PASS` disposition requires `PRODUCTION_LOCKED`; provisioning anomalies require
 both `QUARANTINE` disposition and `QUARANTINED` device state.
-
-The lifecycle record has an explicit 36-byte little-endian serialization over a
-CRC-protected, readback-verified dual-copy store. Semantic validation rejects
-impossible combinations of state, generation, public ID, public fingerprint,
-and failure code. Runtime writes require a successful prior load; blank factory
-initialization is explicit. The FG23 backend uses isolated NVM3 keys `0x0f5230`
-and `0x0f5231`. No private key or credential material enters this record.
 
 Promotion requires duplicate-ID rejection at the manufacturing service,
 power-loss injection at every transition, proof that private material is

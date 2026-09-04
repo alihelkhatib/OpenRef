@@ -54,19 +54,10 @@ Provisioning anomalies always produce `QUARANTINE`.
 Current, RF, acoustic, thermal, and timing limits remain unset until prototype
 measurements exist. An empty limit must never default to pass.
 
-Start each attempt from `production-test-record-template.json`. The template is
-intentionally not a passing record: timestamps, controlled limits,
-measurements, instrument evidence, images, identity, and disposition must be
-populated by the station.
-
 `tools/validate_production_test_record.py` enforces the baseline record rules:
 unique test IDs, bounded measurements when limits are required, valid firmware
 SHA-256 identifiers, failure codes, authorized skips, disposition consistency,
 mandatory quarantine for provisioning anomalies, and the device-identity
-lifecycle contract in `OR-MFG-003`. Record schema version 3 requires all 13
-steps exactly in order, attempt and step UTC timestamps, a hashed limit set,
-fixture calibration, and calibrated instrument records for resistance, power,
-current, acoustic, and RF steps. It rejects fields that could store private
-keys, credentials, provisioning blobs, recovery secrets, or captured audio.
-A passing record requires the `PRODUCTION_LOCKED` state and the public
-16-hex-character `identity_fingerprint`.
+lifecycle contract in `OR-MFG-003`. Record schema version 2 includes
+`device_state` and the 16-hex-character public `identity_fingerprint`; a passing
+record requires the `PRODUCTION_LOCKED` state.

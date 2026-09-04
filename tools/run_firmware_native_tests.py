@@ -11,71 +11,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 TESTS = {
-    "secure_startup_fg23_disabled": [
-        "firmware/common/openref_boot_counter.c",
-        "firmware/common/openref_radio_session.c",
-        "firmware/common/openref_secure_startup.c",
-        "firmware/prototype0/fg23/src/openref_boot_counter_fg23.c",
-        "firmware/prototype0/fg23/src/openref_network_fg23.c",
-        "firmware/prototype0/fg23/src/openref_radio_session_fg23.c",
-        "firmware/prototype0/fg23/src/openref_secure_startup_fg23.c",
-        "firmware/prototype0/fg23/src/openref_secure_startup_fg23_test.c",
+    "watchdog_fg23": [
+        "firmware/system/common/openref_watchdog_gate.c",
+        "firmware/prototype0/fg23/src/openref_watchdog_fg23.c",
+        "firmware/prototype0/fg23/src/openref_watchdog_fg23_test.c",
     ],
-    "secure_startup": [
-        "firmware/common/openref_boot_counter.c",
-        "firmware/common/openref_radio_session.c",
-        "firmware/common/openref_secure_startup.c",
-        "firmware/common/openref_secure_startup_test.c",
+    "audio_link_fg23": [
+        "firmware/common/openref_audio_link.c",
+        "firmware/common/openref_audio_transport.c",
+        "firmware/prototype0/fg23/src/openref_audio_link_fg23.c",
+        "firmware/prototype0/fg23/src/openref_audio_link_fg23_test.c",
     ],
-    "radio_session_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_network_fg23.c",
-        "firmware/prototype0/fg23/src/openref_radio_session_fg23.c",
-        "firmware/prototype0/fg23/src/openref_radio_session_fg23_test.c",
-    ],
-    "radio_session": [
-        "firmware/common/openref_radio_session.c",
-        "firmware/common/openref_radio_session_test.c",
-    ],
-    "secure_transport": [
-        "firmware/common/openref_proto0_packet.c",
-        "firmware/common/openref_network_packet.c",
-        "firmware/common/openref_security.c",
-        "firmware/common/openref_secure_network_packet.c",
-        "firmware/common/openref_secure_transport.c",
-        "firmware/common/openref_secure_transport_test.c",
-    ],
-    "prototype1_runtime_integration": [
-        "firmware/system/common/openref_config_store.c",
-        "firmware/system/common/openref_settings_v1.c",
-        "firmware/system/common/openref_settings_runtime.c",
-        "firmware/system/common/openref_volume_manager.c",
-        "firmware/system/common/openref_startup_supervisor.c",
-        "firmware/system/common/openref_safety_arbiter.c",
-        "firmware/system/common/openref_safety_gate_driver.c",
-        "firmware/system/common/openref_system_runtime.c",
-        "firmware/system/common/openref_prototype1_runtime_integration_test.c",
-    ],
-    "system_runtime": [
-        "firmware/system/common/openref_startup_supervisor.c",
-        "firmware/system/common/openref_safety_arbiter.c",
-        "firmware/system/common/openref_safety_gate_driver.c",
-        "firmware/system/common/openref_system_runtime.c",
-        "firmware/system/common/openref_system_runtime_test.c",
-    ],
-    "safety_gate_driver": [
-        "firmware/system/common/openref_safety_gate_driver.c",
-        "firmware/system/common/openref_safety_gate_driver_test.c",
-    ],
-    "settings_runtime": [
-        "firmware/system/common/openref_config_store.c",
-        "firmware/system/common/openref_settings_v1.c",
-        "firmware/system/common/openref_volume_manager.c",
-        "firmware/system/common/openref_settings_runtime.c",
-        "firmware/system/common/openref_settings_runtime_test.c",
-    ],
-    "settings_v1": [
-        "firmware/system/common/openref_settings_v1.c",
-        "firmware/system/common/openref_settings_v1_test.c",
+    "safety_output_gate": [
+        "firmware/system/common/openref_safety_output_gate.c",
+        "firmware/system/common/openref_safety_output_gate_test.c",
     ],
     "safety_arbiter": [
         "firmware/system/common/openref_safety_arbiter.c",
@@ -96,21 +45,9 @@ TESTS = {
         "firmware/system/common/openref_update_verifier.c",
         "firmware/system/common/openref_update_verifier_test.c",
     ],
-    "update_stager": [
-        "firmware/system/common/openref_boot_policy.c",
-        "firmware/system/common/openref_update_verifier.c",
-        "firmware/system/common/openref_update_stager.c",
-        "firmware/system/common/openref_update_stager_test.c",
-    ],
     "device_lifecycle": [
         "firmware/system/common/openref_device_lifecycle.c",
         "firmware/system/common/openref_device_lifecycle_test.c",
-    ],
-    "device_record_store": [
-        "firmware/system/common/openref_config_store.c",
-        "firmware/system/common/openref_device_lifecycle.c",
-        "firmware/system/common/openref_device_record_store.c",
-        "firmware/system/common/openref_device_record_store_test.c",
     ],
     "charge_supervisor": [
         "firmware/system/common/openref_charge_supervisor.c",
@@ -136,29 +73,34 @@ TESTS = {
         "firmware/system/common/openref_watchdog_gate.c",
         "firmware/system/common/openref_watchdog_gate_test.c",
     ],
-    "watchdog_driver": [
-        "firmware/system/common/openref_watchdog_gate.c",
-        "firmware/system/common/openref_watchdog_driver.c",
-        "firmware/system/common/openref_watchdog_driver_test.c",
-    ],
     "config_store": [
         "firmware/system/common/openref_config_store.c",
         "firmware/system/common/openref_config_store_test.c",
+    ],
+    "rt595_config_backend": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_config_backend.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_config_backend_test.c",
     ],
     "boot_policy": [
         "firmware/system/common/openref_boot_policy.c",
         "firmware/system/common/openref_boot_policy_test.c",
     ],
-    "boot_confirmation": [
-        "firmware/system/common/openref_boot_policy.c",
-        "firmware/system/common/openref_boot_confirmation.c",
-        "firmware/system/common/openref_boot_confirmation_test.c",
-    ],
-    "boot_state_store": [
+    "rt595_boot_state": [
         "firmware/system/common/openref_config_store.c",
         "firmware/system/common/openref_boot_policy.c",
-        "firmware/system/common/openref_boot_state_store.c",
-        "firmware/system/common/openref_boot_state_store_test.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_state.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_state_test.c",
+    ],
+    "rt595_factory_provisioning": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_factory_provisioning.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_factory_provisioning_test.c",
+    ],
+    "rt595_app_confirmation": [
+        "firmware/system/common/openref_config_store.c",
+        "firmware/system/common/openref_boot_policy.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_state.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_app_confirmation.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_app_confirmation_test.c",
     ],
     "volume_manager": [
         "firmware/system/common/openref_volume_manager.c",
@@ -208,34 +150,6 @@ TESTS = {
         "firmware/common/openref_boot_counter.c",
         "firmware/prototype0/fg23/src/openref_boot_counter_fg23.c",
         "firmware/prototype0/fg23/src/openref_boot_counter_fg23_test.c",
-    ],
-    "network_epoch_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_network_epoch_fg23.c",
-        "firmware/prototype0/fg23/src/openref_network_epoch_fg23_test.c",
-    ],
-    "security_counters_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_security_counters_fg23.c",
-        "firmware/prototype0/fg23/src/openref_security_counters_fg23_test.c",
-    ],
-    "config_store_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_config_store_fg23.c",
-        "firmware/prototype0/fg23/src/openref_config_store_fg23_test.c",
-    ],
-    "boot_state_store_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_boot_state_store_fg23.c",
-        "firmware/prototype0/fg23/src/openref_boot_state_store_fg23_test.c",
-    ],
-    "watchdog_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_watchdog_fg23.c",
-        "firmware/prototype0/fg23/src/openref_watchdog_fg23_test.c",
-    ],
-    "reset_cause_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_reset_cause_fg23.c",
-        "firmware/prototype0/fg23/src/openref_reset_cause_fg23_test.c",
-    ],
-    "device_record_store_fg23_disabled": [
-        "firmware/prototype0/fg23/src/openref_device_record_store_fg23.c",
-        "firmware/prototype0/fg23/src/openref_device_record_store_fg23_test.c",
     ],
     "network": [
         "firmware/common/openref_proto0_packet.c",
@@ -293,6 +207,70 @@ TESTS = {
         "firmware/audio_processor/benchmark/openref_audio_benchmark.c",
         "firmware/audio_processor/benchmark/openref_audio_benchmark_test.c",
     ],
+    "rt595_lc3_adapter": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_lc3.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_lc3_test.c",
+    ],
+    "rt595_audio_spi": [
+        "firmware/common/openref_audio_link.c",
+        "firmware/common/openref_audio_transport.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_audio_spi.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_audio_spi_test.c",
+    ],
+    "rt595_update_staging": [
+        "firmware/system/common/openref_update_verifier.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_staging.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_staging_test.c",
+    ],
+    "rt595_update_delivery": [
+        "firmware/system/common/openref_update_verifier.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_staging.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_delivery.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_delivery_test.c",
+    ],
+    "rt595_audio_io": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_audio_io.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_audio_io_test.c",
+    ],
+    "rt595_board_resources": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_board_resources_test.c",
+    ],
+    "rt595_output_guard": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_output_guard.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_output_guard_test.c",
+    ],
+    "rt595_update_crypto": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_crypto.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_update_crypto_test.c",
+    ],
+    "rt595_slot_authenticator": [
+        "firmware/system/common/openref_update_verifier.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_slot_authenticator.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_slot_authenticator_test.c",
+    ],
+    "rt595_boot_coordinator": [
+        "firmware/system/common/openref_config_store.c",
+        "firmware/system/common/openref_boot_policy.c",
+        "firmware/system/common/openref_update_verifier.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_state.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_slot_authenticator.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_coordinator.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_coordinator_test.c",
+    ],
+    "rt595_boot_handoff": [
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_handoff.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_handoff_test.c",
+    ],
+    "rt595_bootstrap": [
+        "firmware/system/common/openref_config_store.c",
+        "firmware/system/common/openref_boot_policy.c",
+        "firmware/system/common/openref_update_verifier.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_state.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_slot_authenticator.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_boot_coordinator.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_bootstrap.c",
+        "firmware/audio_processor/targets/mimxrt595_evk/openref_rt595_bootstrap_test.c",
+    ],
 }
 
 
@@ -310,6 +288,8 @@ def main() -> int:
         "-Ifirmware/common", "-Ifirmware/audio_processor/common",
         "-Ifirmware/audio_processor/benchmark",
         "-Ifirmware/prototype0/fg23/src",
+        "-Ifirmware/audio_processor/targets/mimxrt595_evk/test_support",
+        "-Ifirmware/audio_processor/targets/mimxrt595_evk",
         "-Ifirmware/system/common",
     ]
     for name, sources in TESTS.items():

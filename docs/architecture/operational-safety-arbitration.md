@@ -1,8 +1,9 @@
 # Operational Safety Arbitration
 
 **Document ID:** OR-ARC-018
-**Revision:** 0.2
-**Status:** Portable arbitration and fail-closed gate driver implemented; target wiring pending
+**Revision:** 0.1
+**Status:** Portable policy and fail-closed target output gate implemented;
+hardware callbacks and physical timing evidence pending
 
 ## Purpose
 
@@ -51,10 +52,9 @@ requires GPIO/trace observation while independently injecting every source,
 simultaneous faults, fault clearing in every order, and callback races at audio
 and radio deadline boundaries.
 
-`openref_safety_gate_driver.h/.c` applies the computed permissions through
-target callbacks. It starts with all three gates disabled, disables voice and
-playback before network RF, enables network RF before playback or voice, and
-returns to all-disabled if any callback fails. It rejects the impossible state
-of voice enabled while network transmission is disabled. This is the single
-hardware-actuation boundary the Prototype 1 target must implement; callback
-bodies and physical timing evidence remain target-specific.
+`openref_safety_output_gate` applies the arbiter result to target callbacks. It
+starts with all outputs disabled, removes permissions before adding any, enables
+network/control transport before playback and captured voice, and latches safe
+after any callback failure. A target callback must synchronously confirm that
+the requested hardware or queue gate took effect; deferred requests are not a
+successful application.

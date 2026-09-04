@@ -52,9 +52,3 @@ policy. Promotion requires a reviewed credential scheme, secure counter store,
 secure RNG, USB/fixture transport limits, challenge replay tests across reset,
 physical-presence bypass attempts, fuzzing, and confirmation that communication
 remains unavailable or safely degraded during privileged maintenance.
-
-The FG23 counter backend uses NVM3 key `0x0f5204` for service replay state and
-verifies every strictly increasing write. It is enabled through the repository
-overlay with `-EnablePersistentSecurityCounters`; load or write failure leaves
-service access unavailable. Key allocation and lifecycle are controlled by
-`OR-ARC-019`.

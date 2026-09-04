@@ -9,7 +9,7 @@
 | AV-001 | Six-user simultaneous audio | SYS-001, NET-002, AUD-004, AUD-008 | Integrated prototype | Test |
 | AV-002 | End-to-end latency distribution | SYS-001, AUD-003 | Bench and integrated | Instrumented test |
 | AV-003 | Crew formation under time pressure | SYS-005, NET-001 | Integrated | Human-factors demonstration |
-| AV-004 | Coordinator loss, persisted epoch advance, split-brain convergence, and failover | SYS-003, NET-003, NET-005 | Integrated | Power-cut, partition, and persistence fault injection |
+| AV-004 | Coordinator loss and failover | SYS-003, NET-003, NET-005 | Integrated | Fault injection |
 | AV-005 | Unit temporary loss and rejoin | SYS-003, NET-004 | Integrated | RF interruption test |
 | AV-006 | Nearby crew isolation | SYS-004, NET-007 | Integrated | Multi-crew test |
 | AV-007 | Unauthorized join and replay rejection | SYS-004, NET-006 | Subsystem and integrated | Security test |
@@ -45,4 +45,3 @@
 | AV-037 | Startup sequencing and operational interlocks | FW-001, FW-002, PWR-005, NET-001 | Subsystem and integrated | Reset, brownout, invalid-state, and session-loss fault injection |
 | AV-038 | Status priority, readiness truthfulness, and one-shot attention | SYS-005, SYS-008, SYS-018, SYS-020 | Subsystem and human factors | State injection and demonstration |
 | AV-039 | Cross-subsystem mute and RF-inhibit arbitration | SYS-008, SYS-019, AUD-006, PWR-005, FW-006 | Subsystem and integrated | Exhaustive state injection and timing observation |
-| AV-040 | Physical-intent crew admission, wrong-crew isolation, replay, and wrapped-key activation | SYS-004, NET-001, NET-006, NET-007 | Network and security subsystem | Transcript fault injection and multi-crew test |

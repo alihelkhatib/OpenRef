@@ -37,15 +37,6 @@ durably commit that change before jumping. Failure to commit a trial-attempt
 increment makes the candidate ineligible for that boot, preventing a reset loop
 from bypassing the attempt limit.
 
-`openref_boot_state_store` provides the portable dual-copy implementation over
-two target records. It serializes the state explicitly rather than persisting C
-structure padding, validates CRC/schema/generation through `openref_config_store`,
-then validates slot and pending-attempt semantics. Writes target the inactive
-record and become current only after exact readback. Runtime saves require a
-successful prior load; only an explicit factory-initialize call may create the
-first generation. Corrupt new writes retain the previous generation, generation
-exhaustion never wraps, and semantically invalid records fail closed.
-
 ## Confirmation
 
 An application confirms itself only after clocks, persistent storage, watchdog,
@@ -53,14 +44,6 @@ critical peripherals, and its peer-health interface have remained healthy for a
 defined soak interval. Merely reaching `main()` is insufficient. Radio and audio
 images are independently confirmed so one failed processor does not invalidate
 the other's working image.
-
-`openref_boot_confirmation` implements this continuous-health gate for a trial
-image. It accepts only the authenticated pending slot, requires every health
-input continuously for the configured soak, and restarts the full interval on
-any unhealthy sample or monotonic-clock rollback. Confirmation and
-anti-rollback-floor advancement are applied to a copy and become active only
-after the target persists that copy. Persistence failure latches the gate and
-leaves the original confirmed slot and floor unchanged until reset.
 
 ## Security
 
@@ -103,15 +86,6 @@ The target signature adapter fixes the approved algorithm and trusted key set;
 key identifiers do not permit arbitrary caller-supplied public keys. Manifest
 and image failures record `OPENREF_EVENT_UPDATE_REJECTED` without logging image
 contents or signature material.
-
-`openref_update_stager` binds this verifier to a target flash backend. It derives
-the candidate as the slot opposite the confirmed image, erases only after the
-manifest passes, limits streamed chunks to 256 bytes, reads back and compares
-every write, completes the image digest, requests independent target slot
-authentication, and persists pending boot state last. Any erase/write/readback,
-digest, authentication, or boot-state persistence failure invalidates the
-candidate and latches the staging transaction until reinitialization. The
-in-memory boot state is not advanced when its durable commit fails.
 
 ## Verification
 

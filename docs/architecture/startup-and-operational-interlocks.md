@@ -44,12 +44,3 @@ timeout, pack loss, and time rollback. Target promotion additionally requires
 power-on reset, brownout at each state transition, corrupt configuration,
 invalid image, missing peer, accessory fault, session loss, and GPIO-reset-state
 injection with physical observation of mute and RF-permit markers.
-
-`openref_system_runtime.h/.c` is the portable control-cycle assembly. It ticks
-the startup supervisor first, combines its action mask with the remaining
-safety inputs, arbitrates permissions, and applies them through the fail-closed
-gate driver. A gate callback failure is latched as a system fault until reset;
-subsequent cycles cannot silently restore voice, playback, or RF. The
-Prototype 1 integration test additionally proves that settings restoration
-does not produce audible gain until the complete startup sequence permits
-playback.

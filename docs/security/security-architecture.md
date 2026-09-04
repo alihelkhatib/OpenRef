@@ -1,7 +1,7 @@
 # Security Architecture
 
 **Document ID:** OR-SEC-001  
-**Revision:** 0.4
+**Revision:** 0.3
 **Status:** Prototype 0 packet protection specified; hardware integration pending
 
 ## Security Goals
@@ -50,18 +50,16 @@ Crew setup shall establish:
 
 The product shall avoid requiring users to manually enter long secrets during normal match setup.
 
-The portable `openref_crew_admission` protocol binds physical join intent, a
-fresh device challenge, dynamic node assignment, complete member mask, crew
-session identity, persistent anti-replay counter, coordinator identity,
-roster/transcript digest, and device-specific wrapped key into a signed
-invitation. The counter is durably advanced before activation. The
-`openref_crew_session` boundary then validates membership, installs the 128-bit
-session key through an opaque secure-key backend, and wipes the caller's key
-buffer. Application state retains membership and session metadata, not the raw
-key. Leaving a crew erases the backend key and disables the session even if
-backend erasure reports a failure. Algorithm selection, coordinator trust,
-multi-device formation UX, and FG23 identity/key backends remain promotion
-gates.
+The portable `openref_crew_session` boundary consumes an admission result only
+after a platform-specific pairing protocol has authenticated it. It validates
+the local membership set, rejects the immediately previous session identifier,
+installs the 128-bit session key through an opaque secure-key backend, and
+wipes the caller's key buffer after every activation attempt. Application state
+retains membership and session metadata, not the raw key. Leaving a crew erases
+the backend key and disables the session even if backend erasure reports a
+failure. The pairing transcript, device-identity authentication, session-ID
+generation, and FG23 secure-key backend remain promotion gates; this lifecycle
+boundary is not itself an admission protocol.
 
 ## Voice and Control Protection
 
@@ -104,23 +102,6 @@ boot-counter storage, key provisioning, and live encrypted radio test remain
 open.
 
 ## Firmware Security
-
-`openref_secure_transport.h/.c` owns the per-boot transmit counter, six replay
-windows, exhaustion, and failure accounting. The optional FG23 network path
-uses 114-byte secured frames and authenticates each frame before parsing or
-schedule-state changes. It refuses radio startup until runtime crew-session
-provisioning supplies a key, session ID, advanced persistent boot counter, and
-packet-counter start. Target syntax is verified against the installed FG23 SDK
-and SE Manager headers; live promotion and final project-component linkage
-remain target work.
-
-`openref_secure_startup` advances and verifies the boot counter before exposing
-the crew-session key backend. Successful admission then provisions the radio
-with that exact boot counter and packet counter 1; leaving the crew aborts RAIL
-activity before volatile transport and SE key context are wiped. Counter
-failure clears the startup object, so a stale backend cannot survive an
-exhausted or unreadable counter. The FG23 adapter joins these operations without
-duplicating portable counter policy.
 
 The portable implementation includes fixed envelope wrapping/opening and only
 changes replay state after the platform CCM callback succeeds. FG23 adapters
